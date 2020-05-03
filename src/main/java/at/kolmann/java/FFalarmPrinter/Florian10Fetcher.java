@@ -15,25 +15,25 @@ public class Florian10Fetcher {
             .version(HttpClient.Version.HTTP_2)
             .build();
 
-    public Florian10Fetcher() {
+    public Florian10Fetcher(String cookieFile) {
         CookieManager cookieManager = new CookieManager(
                 new PersistentCookieStore(
                         System.getProperty("user.dir") + File.separator,
-                        "cookies.txt"
+                        cookieFile
                 ),
                 null);
         CookieHandler.setDefault(cookieManager);
     }
 
-    public static JSONObject fetchFlorian10Data(String urlToFetch) {
+    public JSONObject fetchFlorian10Data(String urlToFetch) {
         try {
             URL url = new URL(urlToFetch);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 
-            if (connection.getResponseCode() != connection.HTTP_OK) {
+            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 JSONObject error = new JSONObject();
-                error.append("error", "HTTP Response: " + connection.getResponseCode());
+                error.put("error", "HTTP Response: " + connection.getResponseCode());
                 return error;
             }
 

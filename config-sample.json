@@ -1,0 +1,19 @@
+{
+  "cookieFile": "cookies.txt",
+  
+  "_comment_einsatzUrl" : "https://infoscreen.florian10.info/ows/infoscreen/einsatz.ashx",
+  "_comment_demoUrl1" : "https://infoscreen.florian10.info/ows/infoscreen/demo.ashx?demo=1",
+  "_comment_demoUrl2" : "https://infoscreen.florian10.info/ows/infoscreen/demo.ashx?demo=2",
+  "_comment_demoUrl3" : "https://infoscreen.florian10.info/ows/infoscreen/demo.ashx?demo=3",
+  "_comment_demoUrl4" : "https://infoscreen.florian10.info/ows/infoscreen/demo.ashx?demo=1",
+  
+  "wastlUrl1" : "https://infoscreen.florian10.info/ows/infoscreen/demo.ashx?demo=1",
+  
+  "_comment_Location": "Location of your Feuerwehrhaus",
+  "location": "xx",
+  
+  "_comment_saveJSONlocation": "if set, every non-empty JSON file will be saved to this directory",
+  "saveJSONlocation": "einsatzJSON"
+  
+  
+}

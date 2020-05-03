@@ -29,60 +29,61 @@ public class PersistentCookieStore implements CookieStore, Runnable {
         File nameFile = new File(fileName);
         File file = new File(dirPath + File.separator + nameFile);
 
-        InputStreamReader inputreader;
-        try {
-            inputreader = new InputStreamReader(new FileInputStream(file));
+        if (file.exists()) {
+            try {
+                InputStreamReader inputreader = new InputStreamReader(new FileInputStream(file));
 
-            BufferedReader bufferedReader = new BufferedReader(inputreader);
+                BufferedReader bufferedReader = new BufferedReader(inputreader);
 
-            while ((line = bufferedReader.readLine()) != null) {
-                StringTokenizer tokens = new StringTokenizer(line, "#");
-                i++;
-                while (tokens.hasMoreTokens()) {
-                    switch (i = tokens.countTokens()) {
-                        case 7:
-                            cookieURI = tokens.nextToken();
-                            break;
-                        case 6:
-                            name = tokens.nextToken();
-                            break;
-                        case 5:
-                            value = tokens.nextToken();
-                            break;
-                        case 4:
-                            domain = tokens.nextToken();
-                            break;
-                        case 3:
-                            path = tokens.nextToken();
-                            break;
-                        case 2:
-                            version = tokens.nextToken();
-                            break;
-                        case 1:
-                            expired = tokens.nextToken();
-                            break;
+                while ((line = bufferedReader.readLine()) != null) {
+                    StringTokenizer tokens = new StringTokenizer(line, "#");
+                    i++;
+                    while (tokens.hasMoreTokens()) {
+                        switch (i = tokens.countTokens()) {
+                            case 7:
+                                cookieURI = tokens.nextToken();
+                                break;
+                            case 6:
+                                name = tokens.nextToken();
+                                break;
+                            case 5:
+                                value = tokens.nextToken();
+                                break;
+                            case 4:
+                                domain = tokens.nextToken();
+                                break;
+                            case 3:
+                                path = tokens.nextToken();
+                                break;
+                            case 2:
+                                version = tokens.nextToken();
+                                break;
+                            case 1:
+                                expired = tokens.nextToken();
+                                break;
+                        }
                     }
+
+
+                    HttpCookie cookie = new HttpCookie(name, value);
+                    if (value.contentEquals("*"))
+                        cookie.setValue(null);
+                    cookie.setDomain(domain);
+                    cookie.setPath(path);
+                    cookie.setVersion(Integer.parseInt(version));
+                    cookie.setMaxAge(Long.parseLong(expired));
+
+                    store.add(new URI(cookieURI), cookie);
                 }
-
-
-                HttpCookie cookie = new HttpCookie(name, value);
-                if (value.contentEquals("*"))
-                    cookie.setValue(null);
-                cookie.setDomain(domain);
-                cookie.setPath(path);
-                cookie.setVersion(Integer.parseInt(version));
-                cookie.setMaxAge(Long.parseLong(expired));
-
-                store.add(new URI(cookieURI), cookie);
+            } catch (FileNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
             }
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(this));
