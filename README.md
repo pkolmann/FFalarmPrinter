@@ -1,4 +1,4 @@
-# FFalarmPrinter
+# at.kolmann.java.FFalarmPrinter.FFalarmPrinter
 Florian 10 WASTL alarm printer
 
 We used to have a perl program, fetching the data from Florian 10 WASTL interface and create a nice HTML page to print.
