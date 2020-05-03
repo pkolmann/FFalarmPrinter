@@ -13,7 +13,10 @@
   "location": "xx",
   
   "_comment_saveJSONlocation": "if set, every non-empty JSON file will be saved to this directory",
-  "saveJSONlocation": "einsatzJSON"
+  "saveJSONlocation": "einsatzJSON",
+  
+  "_comment_GoogleMapsApiKey": "Add your google Maps api key",
+  "googleMapsApiKey": "xxxx"
   
   
 }

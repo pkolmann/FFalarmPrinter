@@ -4,14 +4,22 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class FFalarmPrinter {
     private Florian10Fetcher florian10Fetcher;
     private Config config;
     EinsatzData einsatzData;
+    final Logger logger;
+
 
     public FFalarmPrinter() {
         config = new Config();
+        logger = LoggerFactory.getLogger(FFalarmPrinter.class);
         String cookieFile = null;
         if (config.get("cookieFile") instanceof String) {
             cookieFile = (String) config.get("cookieFile");
@@ -61,6 +69,14 @@ public class FFalarmPrinter {
                 System.out.println("");
             }
 
+        }
+
+        System.out.println("FFalarm end...");
+
+        einsatzData.finish();
+        Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+        for (Thread thread : threadSet) {
+            System.out.println("Thread: " + thread.getName());
         }
     }
 }

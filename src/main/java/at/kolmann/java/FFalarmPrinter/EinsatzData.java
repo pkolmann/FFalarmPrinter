@@ -8,9 +8,11 @@ import java.util.Calendar;
 
 public class EinsatzData {
     Config config;
+    Einsatz einsatz;
 
     public EinsatzData(Config config) {
         this.config = config;
+        this.einsatz = new Einsatz(config);
     }
 
     public int process(JSONArray einsatzData) {
@@ -50,10 +52,16 @@ public class EinsatzData {
 
         for (int i = 0; i < einsatzData.length(); i++) {
             System.out.println("Einsatz Daten " + i + ":");
-            System.out.println(einsatzData.getJSONObject(i).toString(2));
+            einsatz.process(einsatzData.getJSONObject(i));
             System.out.println("========");
         }
 
+        System.out.println("EinsatzData end...");
         return 0;
+    }
+
+    public void finish() {
+        einsatz.finish();
+        einsatz = null;
     }
 }
