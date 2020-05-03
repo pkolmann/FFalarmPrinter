@@ -7,5 +7,6 @@ I now want to redo this work in java to have it available for Windows and Linux.
 
 I have this here on GitHub so others can use this too.
 
-!!!! WARNING !!!
+<b>!!!! WARNING !!!</b>
+
 This is my first Java project, so things are not perfect. Please don't be too hard with your critism.
