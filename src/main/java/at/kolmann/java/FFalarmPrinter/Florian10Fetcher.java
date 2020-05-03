@@ -31,6 +31,12 @@ public class Florian10Fetcher {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 
+            if (connection.getResponseCode() != connection.HTTP_OK) {
+                JSONObject error = new JSONObject();
+                error.append("error", "HTTP Response: " + connection.getResponseCode());
+                return error;
+            }
+
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(connection.getInputStream()));
             String inputLine;

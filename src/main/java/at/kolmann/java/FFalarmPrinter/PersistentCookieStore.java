@@ -15,9 +15,7 @@ public class PersistentCookieStore implements CookieStore, Runnable {
         this.fileName = fileName;
 
         store = new CookieManager().getCookieStore();
-        // deserialize cookies into store
 
-        System.out.println("Setting cookie....");
         int i = 0;
         String line;
         String cookieURI = null;
@@ -87,7 +85,6 @@ public class PersistentCookieStore implements CookieStore, Runnable {
             e.printStackTrace();
         }
 
-        System.out.println("Cookie set.");
         Runtime.getRuntime().addShutdownHook(new Thread(this));
     }
 
@@ -98,7 +95,6 @@ public class PersistentCookieStore implements CookieStore, Runnable {
         // serialize cookies to persistent storage
         System.out.println("");
         System.out.println("");
-        System.out.println("Cookie Store: ");
 
         List<URI> cookieURIs = store.getURIs();
         for (URI uri : cookieURIs) {
@@ -157,10 +153,6 @@ public class PersistentCookieStore implements CookieStore, Runnable {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-                System.out.println("===============");
-                System.out.println("");
-
             }
         }
     }
