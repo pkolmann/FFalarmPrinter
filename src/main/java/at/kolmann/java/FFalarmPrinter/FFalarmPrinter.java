@@ -51,15 +51,19 @@ public class FFalarmPrinter {
                 System.out.println(florian10Data.toString(2));
                 System.out.println("");
             } else if (florian10Data.has("CurrentState")) {
-                if (florian10Data.get("CurrentState").equals("waiting") && florian10Data.has("Token")) {
+                if (florian10Data.get("CurrentState").equals("token") && florian10Data.has("Token")) {
                     System.out.println("Token muss erst freigeschalten werden:");
                     System.out.println("");
                     System.out.println(florian10Data.get("Token"));
                     System.out.println("");
-                }
-
-                if (florian10Data.getString("CurrentState").equals("data") && florian10Data.has("EinsatzData")) {
+                } else if (florian10Data.getString("CurrentState").equals("data") && florian10Data.has("EinsatzData")) {
                     einsatzData.process(florian10Data.getJSONArray("EinsatzData"));
+                } else {
+                    System.out.println("Unknown CurrentState!");
+                    System.out.println("");
+                    System.out.println("");
+                    System.out.println(florian10Data.toString(2));
+                    System.out.println("");
                 }
             } else {
                 System.out.println("No 'CurrentState' found in Respnse!");
@@ -73,10 +77,6 @@ public class FFalarmPrinter {
 
         System.out.println("FFalarm end...");
 
-        einsatzData.finish();
-        Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
-        for (Thread thread : threadSet) {
-            System.out.println("Thread: " + thread.getName());
-        }
+        einsatzData.shutdown();
     }
 }

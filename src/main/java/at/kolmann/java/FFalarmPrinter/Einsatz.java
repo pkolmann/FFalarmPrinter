@@ -15,7 +15,29 @@ public class Einsatz {
         String einsatzID = einsatz.getString("EinsatzID");
         System.out.println(einsatzID);
 
-        einsatzRouter.getRoute("Untere Feldstrasse 80, 2823 Pitten");
+        StringBuilder einsatzAdresse = new StringBuilder();
+        if (einsatz.has("Strasse")) {
+            einsatzAdresse.append(einsatz.getString("Strasse"));
+            if (einsatz.has("Nummer1")) {
+                einsatzAdresse.append(" ");
+                einsatzAdresse.append(einsatz.getString("Nummer1"));
+            }
+        }
+        if (einsatz.has("Plz")) {
+            if (einsatzAdresse.length() > 0) {
+                einsatzAdresse.append(", ");
+            }
+            einsatzAdresse.append(einsatz.getString("Plz"));
+            if (einsatz.has("Ort")) {
+                einsatzAdresse.append(" ");
+                einsatzAdresse.append(einsatz.getString("Ort"));
+            }
+        }
+
+        if (einsatzAdresse.length() > 0) {
+            einsatzRouter.getRoute(einsatzAdresse.toString());
+        }
+
 
 
 
@@ -24,7 +46,7 @@ public class Einsatz {
         return 0;
     }
 
-    public void finish() {
-        einsatzRouter = null;
+    public void shutdown() {
+        einsatzRouter.shutdown();
     }
 }

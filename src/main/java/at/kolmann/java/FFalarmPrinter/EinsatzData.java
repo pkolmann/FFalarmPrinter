@@ -60,8 +60,7 @@ public class EinsatzData {
         return 0;
     }
 
-    public void finish() {
-        einsatz.finish();
-        einsatz = null;
+    public void shutdown() {
+        einsatz.shutdown();
     }
 }
