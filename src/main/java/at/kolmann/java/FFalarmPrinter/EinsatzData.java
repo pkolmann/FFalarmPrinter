@@ -56,7 +56,6 @@ public class EinsatzData {
             System.out.println("========");
         }
 
-        System.out.println("EinsatzData end...");
         return 0;
     }
 

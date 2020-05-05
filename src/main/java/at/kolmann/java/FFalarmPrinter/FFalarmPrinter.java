@@ -75,8 +75,6 @@ public class FFalarmPrinter {
 
         }
 
-        System.out.println("FFalarm end...");
-
         einsatzData.shutdown();
     }
 }

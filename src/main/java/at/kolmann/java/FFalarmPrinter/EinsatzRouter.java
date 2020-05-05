@@ -47,7 +47,6 @@ public class EinsatzRouter {
     }
 
     public void shutdown() {
-        System.out.println("EinsatzRouter shutdown...");
         context.shutdown();
     }
 
@@ -65,7 +64,9 @@ public class EinsatzRouter {
                     .mode(TravelMode.DRIVING)
                     .units(Unit.METRIC)
                     .region("at")
+                    .language("de-AT")
                     .await();
+
         } catch (ApiException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -85,12 +86,22 @@ public class EinsatzRouter {
                     System.out.println(route.summary);
                     System.out.println(route.copyrights);
                     System.out.println(route.toString());
+
+                    ImageResult mapsImage = new StaticMapsRequest(context)
+                            .path(route.overviewPolyline)
+                            .format(StaticMapsRequest.ImageFormat.png)
+                            .maptype(StaticMapsRequest.StaticMapType.roadmap)
+                            .language("de")
+                            .size(new Size(640, 480))
+                            .await();
+
                     for (DirectionsLeg routeLeg : route.legs) {
                         System.out.println("Leg:");
                         System.out.println(routeLeg.toString());
                         System.out.println("Start: " + routeLeg.startAddress);
                         System.out.println("End: " + routeLeg.endAddress);
                         System.out.println("Distance: " + routeLeg.distance.humanReadable);
+
                         if (routeLeg.duration != null) {
                             System.out.println("duration: " + routeLeg.duration.humanReadable);
                         }
@@ -114,15 +125,6 @@ public class EinsatzRouter {
                 }
                 System.out.println("=======");
 
-                System.out.println("");
-                System.out.println("Waypoints: ");
-
-                for (GeocodedWaypoint wayPoint : result.geocodedWaypoints) {
-                    System.out.println("Waypoint:");
-                    System.out.println(wayPoint.placeId);
-                    System.out.println(wayPoint.toString());
-                    System.out.println("-----");
-                }
             } catch (Exception e) {
                 e.printStackTrace();
                 context.shutdown();
@@ -130,6 +132,7 @@ public class EinsatzRouter {
         } else {
             System.out.println("No GeoAPI Result!");
         }
+
 
         return 0;
     }
