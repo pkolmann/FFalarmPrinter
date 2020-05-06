@@ -6,13 +6,16 @@ import com.google.maps.*;
 import com.google.maps.errors.ApiException;
 import com.google.maps.model.*;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class EinsatzRouter {
-    Config config;
-    GeoApiContext context;
-    GeocodingResult[] start;
-    DirectionsApiRequest directionsRequest;
+    private Config config = null;
+    private GeoApiContext context = null;
+    private GeocodingResult[] start = null;
+    private DirectionsApiRequest directionsRequest = null;
+    private ImageResult mapsImage = null;
+    private DirectionsResult result = null;
 
     public EinsatzRouter(Config config) {
         this.config = config;
@@ -51,7 +54,6 @@ public class EinsatzRouter {
     }
 
     public int getRoute(String destination) {
-        DirectionsResult result = null;
         try {
             result = directionsRequest
                     .origin(
@@ -87,13 +89,18 @@ public class EinsatzRouter {
                     System.out.println(route.copyrights);
                     System.out.println(route.toString());
 
-                    ImageResult mapsImage = new StaticMapsRequest(context)
+                    mapsImage = new StaticMapsRequest(context)
                             .path(route.overviewPolyline)
                             .format(StaticMapsRequest.ImageFormat.png)
                             .maptype(StaticMapsRequest.StaticMapType.roadmap)
                             .language("de")
                             .size(new Size(640, 480))
                             .await();
+
+                    try (FileOutputStream fos = new FileOutputStream("pathname")) {
+                        fos.write(myByteArray);
+                        //fos.close(); There is no more need for this line since you had created the instance of "fos" inside the try. And this will automatically close the OutputStream
+                    }
 
                     for (DirectionsLeg routeLeg : route.legs) {
                         System.out.println("Leg:");
@@ -136,4 +143,12 @@ public class EinsatzRouter {
 
         return 0;
     }
+
+    public ImageResult getMapsImage() {
+        return mapsImage;
+    }
+    public DirectionsResult getMapsResult() {
+        return result;
+    }
+
 }
