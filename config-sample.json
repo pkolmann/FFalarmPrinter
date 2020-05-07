@@ -9,14 +9,14 @@
   
   "wastlUrl1" : "https://infoscreen.florian10.info/ows/infoscreen/demo.ashx?demo=1",
   
-  "_comment_Location": "Location of your Feuerwehrhaus",
-  "location": "xx",
-  
-  "_comment_saveJSONlocation": "if set, every non-empty JSON file will be saved to this directory",
-  "saveJSONlocation": "einsatzJSON",
+  "_comment_saveWEBlocation": "Directory where files will be saved",
+  "saveWEBlocation": "einsatzWEB",
   
   "_comment_GoogleMapsApiKey": "Add your google Maps api key",
   "googleMapsApiKey": "xxxx"
   
   
+  "_comment_FeuerwehrhausLocation": "Location des eigenen Feuerwehrhauses für Routing",
+  "FeuerwehrhausLocationLat": 47.0,
+  "FeuerwehrhausLocationLon": 16.0
 }

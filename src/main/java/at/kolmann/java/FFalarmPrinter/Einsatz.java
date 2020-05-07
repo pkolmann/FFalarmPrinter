@@ -1,17 +1,19 @@
 package at.kolmann.java.FFalarmPrinter;
 
+import com.google.maps.ImageResult;
 import org.json.JSONObject;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class Einsatz {
     private Config config;
-    private EinsatzRouter einsatzRouter;
 
     public Einsatz(Config config) {
         this.config = config;
-        einsatzRouter = new EinsatzRouter(config);
     }
 
-    public int process(JSONObject einsatz) {
+    public int process(JSONObject einsatz, String alarmPath) {
         String einsatzID = einsatz.getString("EinsatzID");
         System.out.println(einsatzID);
 
@@ -36,6 +38,17 @@ public class Einsatz {
 
         if (einsatzAdresse.length() > 0) {
             einsatzRouter.getRoute(einsatzAdresse.toString());
+
+            ImageResult einsatzMap = einsatzRouter.getMapsImage();
+            if (einsatzMap != null) {
+                try (FileOutputStream fos = new FileOutputStream(alarmPath+".png")) {
+                    System.out.println("Saving Map to " + alarmPath + ".png");
+                    fos.write(einsatzMap.imageData);
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
 

@@ -17,29 +17,30 @@ public class EinsatzData {
 
     public int process(JSONArray einsatzData) {
         Calendar myCal = Calendar.getInstance();
+        String alarmString = String.format(("alarm-%tY%<tm%<td-%<tH%<tM%<tS"), myCal);
+        String savePath = null;
 
-        String saveJSONlocation = null;
-        if (config.get("saveJSONlocation") instanceof String) {
-            saveJSONlocation = (String) config.get("saveJSONlocation");
+        if (config.get("saveWEBlocation") instanceof String) {
+            savePath = (String) config.get("saveWEBlocation");
         }
-        if (saveJSONlocation != null) {
-            File savePath = new File(saveJSONlocation);
-            if (!savePath.isAbsolute()) {
-                savePath = new File(System.getProperty("user.dir") + File.separator + savePath);
+        if (savePath != null) {
+            File savePathFile = new File(savePath);
+            if (!savePathFile.isAbsolute()) {
+                savePath = System.getProperty("user.dir") + File.separator + savePath;
+                savePathFile = new File(savePath);
             }
 
-            if (!savePath.exists()) {
-                if (!savePath.mkdirs()) {
-                    System.out.println("Failed to create "+savePath.toString());
+            if (!savePathFile.exists()) {
+                if (!savePathFile.mkdirs()) {
+                    System.out.println("Failed to create "+savePathFile.toString());
                 }
             }
 
-            if (savePath.exists()) {
-                String fileName = String.format(("alarm-%tY%<tm%<td-%<tH%<tM%<tS.json"), myCal);
-                File saveFile = new File(savePath + File.separator + fileName);
+            if (savePathFile.exists()) {
+                File saveJSONfile = new File(savePath + File.separator + alarmString + ".json");
 
                 try {
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(saveFile));
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(saveJSONfile));
                     writer.write(einsatzData.toString(2));
                     writer.newLine();
                     writer.flush();
@@ -52,7 +53,9 @@ public class EinsatzData {
 
         for (int i = 0; i < einsatzData.length(); i++) {
             System.out.println("Einsatz Daten " + i + ":");
-            einsatz.process(einsatzData.getJSONObject(i));
+            String alarmPath = savePath + File.separator + alarmString + "-" +
+                    einsatzData.getJSONObject(i).getString("EinsatzID");
+            einsatz.process(einsatzData.getJSONObject(i), alarmPath);
             System.out.println("========");
         }
 

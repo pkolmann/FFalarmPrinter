@@ -97,11 +97,6 @@ public class EinsatzRouter {
                             .size(new Size(640, 480))
                             .await();
 
-                    try (FileOutputStream fos = new FileOutputStream("pathname")) {
-                        fos.write(myByteArray);
-                        //fos.close(); There is no more need for this line since you had created the instance of "fos" inside the try. And this will automatically close the OutputStream
-                    }
-
                     for (DirectionsLeg routeLeg : route.legs) {
                         System.out.println("Leg:");
                         System.out.println(routeLeg.toString());
