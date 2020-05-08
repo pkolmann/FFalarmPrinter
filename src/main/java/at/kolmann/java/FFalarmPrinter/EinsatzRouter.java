@@ -10,18 +10,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class EinsatzRouter {
-    private Config config = null;
-    private GeoApiContext context = null;
+    private Config config;
+    private GeoApiContext context;
     private GeocodingResult[] start = null;
-    private DirectionsApiRequest directionsRequest = null;
-    private ImageResult mapsImage = null;
-    private DirectionsResult result = null;
+    private DirectionsApiRequest directionsRequest;
+    private ImageResult mapsImage;
+    private DirectionsResult result;
 
     public EinsatzRouter(Config config) {
         this.config = config;
 
         context = new GeoApiContext.Builder()
-                .apiKey((String) config.get("googleMapsApiKey"))
+                .apiKey(config.getString("googleMapsApiKey"))
                 .disableRetries()
                 .build();
 
@@ -33,8 +33,8 @@ public class EinsatzRouter {
             start = GeocodingApi.newRequest(context)
                     .latlng(
                             new LatLng(
-                                    (double) config.get("FeuerwehrhausLocationLat"),
-                                    (double) config.get("FeuerwehrhausLocationLon")
+                                    config.getDouble("FeuerwehrhausLocationLat"),
+                                    config.getDouble("FeuerwehrhausLocationLon")
                             )
                     )
                     .await();
@@ -55,20 +55,41 @@ public class EinsatzRouter {
 
     public int getRoute(String destination) {
         try {
-            result = directionsRequest
-                    .origin(
-                            new LatLng(
-                                    (double) config.get("FeuerwehrhausLocationLat"),
-                                    (double) config.get("FeuerwehrhausLocationLon")
-                            )
-                    )
-                    .destination(destination)
-                    .mode(TravelMode.DRIVING)
-                    .units(Unit.METRIC)
-                    .region("at")
-                    .language("de-AT")
-                    .await();
-
+            if (config.getString("FeuerwehrhausLocationWaypoint") != null) {
+                result = directionsRequest
+                        .origin(
+                                new LatLng(
+                                        config.getDouble("FeuerwehrhausLocationLat"),
+                                        config.getDouble("FeuerwehrhausLocationLon")
+                                )
+                        )
+                        .waypoints(
+                                new DirectionsApiRequest.Waypoint(
+                                        config.getString("FeuerwehrhausLocationWaypoint"),
+                                        false
+                                )
+                        )
+                        .destination(destination)
+                        .mode(TravelMode.DRIVING)
+                        .units(Unit.METRIC)
+                        .region("at")
+                        .language("de-AT")
+                        .await();
+            } else {
+                result = directionsRequest
+                        .origin(
+                                new LatLng(
+                                        config.getDouble("FeuerwehrhausLocationLat"),
+                                        config.getDouble("FeuerwehrhausLocationLon")
+                                )
+                        )
+                        .destination(destination)
+                        .mode(TravelMode.DRIVING)
+                        .units(Unit.METRIC)
+                        .region("at")
+                        .language("de-AT")
+                        .await();
+            }
         } catch (ApiException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -84,17 +105,33 @@ public class EinsatzRouter {
                 System.out.println("WayPoints: " + result.geocodedWaypoints.length);
                 System.out.println("");
                 System.out.println("Routes: ");
-                for (DirectionsRoute route : result.routes) {
+                // only use route 0
+                System.out.println("Routes: " + result.routes.length);
+                if (result.routes.length > 0) {
+                    DirectionsRoute route = result.routes[0];
                     System.out.println(route.summary);
                     System.out.println(route.copyrights);
                     System.out.println(route.toString());
 
+                    StaticMapsRequest.Markers markerA = new StaticMapsRequest.Markers();
+                    markerA.addLocation(new LatLng(
+                            config.getDouble("FeuerwehrhausLocationLat"),
+                            config.getDouble("FeuerwehrhausLocationLon")
+                    ));
+                    markerA.label("A");
+                    
+                    StaticMapsRequest.Markers markerE = new StaticMapsRequest.Markers();
+                    markerE.addLocation(destination);
+                    markerE.label("E");
+
                     mapsImage = new StaticMapsRequest(context)
                             .path(route.overviewPolyline)
+                            .markers(markerA)
+                            .markers(markerE)
                             .format(StaticMapsRequest.ImageFormat.png)
                             .maptype(StaticMapsRequest.StaticMapType.roadmap)
                             .language("de")
-                            .size(new Size(640, 480))
+                            .size(new Size(1280, 960))
                             .await();
 
                     for (DirectionsLeg routeLeg : route.legs) {

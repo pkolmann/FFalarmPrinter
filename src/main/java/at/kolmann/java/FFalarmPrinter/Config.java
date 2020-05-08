@@ -2,7 +2,6 @@ package at.kolmann.java.FFalarmPrinter;
 
 import org.json.JSONObject;
 
-import javax.imageio.IIOException;
 import java.io.*;
 
 public class Config {
@@ -64,5 +63,23 @@ public class Config {
         } else {
             return null;
         }
+    }
+
+    public String getString(String key) {
+        Object value = get(key);
+        if (value instanceof String) {
+            return (String) value;
+        }
+
+        return null;
+    }
+
+    public double getDouble(String key) throws IOException {
+        Object value = get(key);
+        if (value instanceof Double) {
+            return (double) value;
+        }
+
+        throw new IOException("Key " + key + " is not a double!");
     }
 }

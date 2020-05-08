@@ -13,10 +13,13 @@
   "saveWEBlocation": "einsatzWEB",
   
   "_comment_GoogleMapsApiKey": "Add your google Maps api key",
-  "googleMapsApiKey": "xxxx"
-  
+  "googleMapsApiKey": "xxxx",
   
   "_comment_FeuerwehrhausLocation": "Location des eigenen Feuerwehrhauses für Routing",
   "FeuerwehrhausLocationLat": 47.0,
-  "FeuerwehrhausLocationLon": 16.0
+  "FeuerwehrhausLocationLon": 16.0,
+  
+  "_comment_FeuerwehrhausWaypoint": "We need to add a waypoint to have google Maps do proper routes. If set, it will be added as a waypoint without stopover",
+  "FeuerwehrhausLocationWaypoint": null
+  
 }

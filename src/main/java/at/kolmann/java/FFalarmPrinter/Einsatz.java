@@ -37,6 +37,7 @@ public class Einsatz {
         }
 
         if (einsatzAdresse.length() > 0) {
+            EinsatzRouter einsatzRouter = new EinsatzRouter(config);
             einsatzRouter.getRoute(einsatzAdresse.toString());
 
             ImageResult einsatzMap = einsatzRouter.getMapsImage();
@@ -44,22 +45,17 @@ public class Einsatz {
                 try (FileOutputStream fos = new FileOutputStream(alarmPath+".png")) {
                     System.out.println("Saving Map to " + alarmPath + ".png");
                     fos.write(einsatzMap.imageData);
-                    fos.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
+
+            einsatzRouter.shutdown();
         }
-
-
-
-
-
 
         return 0;
     }
 
     public void shutdown() {
-        einsatzRouter.shutdown();
     }
 }
