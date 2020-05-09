@@ -16,6 +16,7 @@ public class EinsatzRouter {
     private DirectionsApiRequest directionsRequest;
     private ImageResult mapsImage;
     private DirectionsResult result;
+    private DirectionsRoute route;
 
     public EinsatzRouter(Config config) {
         this.config = config;
@@ -53,7 +54,7 @@ public class EinsatzRouter {
         context.shutdown();
     }
 
-    public int getRoute(String destination) {
+    private void process(String destination) {
         try {
             if (config.getString("FeuerwehrhausLocationWaypoint") != null) {
                 result = directionsRequest
@@ -100,18 +101,9 @@ public class EinsatzRouter {
 
         if (result != null) {
             try {
-                System.out.println("Destination: " + destination);
-                System.out.println("Routes: " + result.routes.length);
-                System.out.println("WayPoints: " + result.geocodedWaypoints.length);
-                System.out.println("");
-                System.out.println("Routes: ");
                 // only use route 0
-                System.out.println("Routes: " + result.routes.length);
                 if (result.routes.length > 0) {
-                    DirectionsRoute route = result.routes[0];
-                    System.out.println(route.summary);
-                    System.out.println(route.copyrights);
-                    System.out.println(route.toString());
+                    route = result.routes[0];
 
                     StaticMapsRequest.Markers markerA = new StaticMapsRequest.Markers();
                     markerA.addLocation(new LatLng(
@@ -134,35 +126,7 @@ public class EinsatzRouter {
                             .size(new Size(1280, 960))
                             .await();
 
-                    for (DirectionsLeg routeLeg : route.legs) {
-                        System.out.println("Leg:");
-                        System.out.println(routeLeg.toString());
-                        System.out.println("Start: " + routeLeg.startAddress);
-                        System.out.println("End: " + routeLeg.endAddress);
-                        System.out.println("Distance: " + routeLeg.distance.humanReadable);
-
-                        if (routeLeg.duration != null) {
-                            System.out.println("duration: " + routeLeg.duration.humanReadable);
-                        }
-                        if (routeLeg.durationInTraffic != null) {
-                            System.out.println("durationInTraffic: " + routeLeg.durationInTraffic.humanReadable);
-                        }
-                        System.out.println("");
-                        System.out.println("Steps:");
-                        for (DirectionsStep step : routeLeg.steps) {
-                            System.out.println("    htmlInstructions: " + step.htmlInstructions);
-                            System.out.println("    distance: " + step.distance.humanReadable);
-                            System.out.println("    duration: " + step.duration.humanReadable);
-                            System.out.println("    travelMode: " + step.travelMode.toString());
-
-                            System.out.println("++++++");
-                        }
-
-                        System.out.println("######");
-                    }
-                    System.out.println("-----");
                 }
-                System.out.println("=======");
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -171,16 +135,17 @@ public class EinsatzRouter {
         } else {
             System.out.println("No GeoAPI Result!");
         }
-
-
-        return 0;
     }
 
     public ImageResult getMapsImage() {
         return mapsImage;
     }
-    public DirectionsResult getMapsResult() {
-        return result;
+
+    public DirectionsRoute getRoute(String destination) {
+        if (route == null) {
+            process(destination);
+        }
+        return route;
     }
 
 }

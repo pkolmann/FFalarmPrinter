@@ -1,6 +1,8 @@
 package at.kolmann.java.FFalarmPrinter;
 
 import com.google.maps.ImageResult;
+import com.google.maps.StaticMapsRequest;
+import com.google.maps.model.*;
 import org.json.JSONObject;
 
 import java.io.FileOutputStream;
@@ -8,6 +10,7 @@ import java.io.IOException;
 
 public class Einsatz {
     private Config config;
+    private EinsatzPDF einsatzPDF = new EinsatzPDF();
 
     public Einsatz(Config config) {
         this.config = config;
@@ -38,7 +41,7 @@ public class Einsatz {
 
         if (einsatzAdresse.length() > 0) {
             EinsatzRouter einsatzRouter = new EinsatzRouter(config);
-            einsatzRouter.getRoute(einsatzAdresse.toString());
+            DirectionsRoute route = einsatzRouter.getRoute(einsatzAdresse.toString());
 
             ImageResult einsatzMap = einsatzRouter.getMapsImage();
             if (einsatzMap != null) {
@@ -48,6 +51,14 @@ public class Einsatz {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
+
+            if (route != null) {
+                einsatzPDF.saveEinsatzPDF(
+                        alarmPath+".pdf",
+                        route,
+                        einsatzMap
+                );
             }
 
             einsatzRouter.shutdown();
