@@ -41,7 +41,8 @@ public class Einsatz {
 
         if (einsatzAdresse.length() > 0) {
             EinsatzRouter einsatzRouter = new EinsatzRouter(config);
-            DirectionsRoute route = einsatzRouter.getRoute(einsatzAdresse.toString());
+            DirectionsRoute route = null;
+            //DirectionsRoute route = einsatzRouter.getRoute(einsatzAdresse.toString());
 
             ImageResult einsatzMap = einsatzRouter.getMapsImage();
             if (einsatzMap != null) {
@@ -53,13 +54,13 @@ public class Einsatz {
                 }
             }
 
-            if (route != null) {
-                einsatzPDF.saveEinsatzPDF(
-                        alarmPath+".pdf",
-                        route,
-                        einsatzMap
-                );
-            }
+            einsatzPDF.saveEinsatzPDF(
+                    alarmPath+".pdf",
+                    einsatzID,
+                    einsatz,
+                    route,
+                    einsatzMap
+            );
 
             einsatzRouter.shutdown();
         }
