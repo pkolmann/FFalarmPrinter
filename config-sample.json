@@ -20,6 +20,9 @@
   "FeuerwehrhausLocationLon": 16.0,
   
   "_comment_FeuerwehrhausWaypoint": "We need to add a waypoint to have google Maps do proper routes. If set, it will be added as a waypoint without stopover",
-  "FeuerwehrhausLocationWaypoint": null
+  "FeuerwehrhausLocationWaypoint": null,
+  
+  "_comment_FeuerwehrLogo": "Path to a logo to be added to alarm file",
+  "FeuerwehrLogo": "FF-logo.jpg"
   
 }

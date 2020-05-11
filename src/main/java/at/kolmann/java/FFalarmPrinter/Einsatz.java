@@ -10,10 +10,11 @@ import java.io.IOException;
 
 public class Einsatz {
     private Config config;
-    private EinsatzPDF einsatzPDF = new EinsatzPDF();
+    private EinsatzPDF einsatzPDF;
 
     public Einsatz(Config config) {
         this.config = config;
+        einsatzPDF = new EinsatzPDF(config);
     }
 
     public int process(JSONObject einsatz, String alarmPath) {
@@ -41,8 +42,8 @@ public class Einsatz {
 
         if (einsatzAdresse.length() > 0) {
             EinsatzRouter einsatzRouter = new EinsatzRouter(config);
-            DirectionsRoute route = null;
-            //DirectionsRoute route = einsatzRouter.getRoute(einsatzAdresse.toString());
+            //DirectionsRoute route = null;
+            DirectionsRoute route = einsatzRouter.getRoute(einsatzAdresse.toString());
 
             ImageResult einsatzMap = einsatzRouter.getMapsImage();
             if (einsatzMap != null) {
