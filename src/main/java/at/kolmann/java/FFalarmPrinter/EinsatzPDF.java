@@ -17,10 +17,7 @@ import com.itextpdf.kernel.pdf.PdfString;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.layout.LayoutArea;
 import com.itextpdf.layout.layout.LayoutContext;
 import com.itextpdf.layout.layout.LayoutResult;
@@ -32,6 +29,8 @@ import javax.lang.model.element.Element;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.google.maps.StaticMapsRequest.Markers.MarkersSize.small;
 
@@ -43,6 +42,7 @@ public class EinsatzPDF {
 //    private static Font small = new Font(Font.FontFamily.TIMES_ROMAN, 12);
     private Config config;
     protected PdfFont bold;
+    private Matcher matcher;
 
     public EinsatzPDF(Config config) { this.config = config; }
 
@@ -64,14 +64,14 @@ public class EinsatzPDF {
             document.setFont(PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN));
             document.setFontSize(12);
 
-            Table table = new Table(UnitValue.createPercentArray(new float[] {3, 1})).useAllAvailableWidth();
+            Table headerTable = new Table(UnitValue.createPercentArray(new float[] {3, 1})).useAllAvailableWidth();
             Cell cell = new Cell();
             cell.add(new Paragraph("FF Pitten Einsatzplan - " + einsatzID));
             cell.setFontSize(22);
             cell.setTextAlignment(TextAlignment.CENTER);
             cell.setBorder(Border.NO_BORDER);
             cell.setVerticalAlignment(VerticalAlignment.MIDDLE);
-            table.addCell(cell);
+            headerTable.addCell(cell);
 
             if (config.getString("FeuerwehrLogo") != null) {
                 String imageFileString = config.getString("FeuerwehrLogo");
@@ -86,24 +86,25 @@ public class EinsatzPDF {
                     ImageData imageData = ImageDataFactory.create(imageFileString);
                     Image logoImage = new Image(imageData);
                     logoImage.scaleAbsolute(50,50);
+                    logoImage.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                     cell = new Cell();
                     cell.add(logoImage);
                     cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                     cell.setBorder(Border.NO_BORDER);
-                    table.addCell(cell);
+                    headerTable.addCell(cell);
                 }
             } else {
                 cell = new Cell();
                 cell.add(new Paragraph(""));
                 cell.setBorder(Border.NO_BORDER);
-                table.addCell(cell);
+                headerTable.addCell(cell);
             }
-            document.add(table);
+            document.add(headerTable);
             document.add(new Paragraph(" "));
             document.add(new Paragraph(" "));
 
             // Einsatz-ID
-            table = new Table(UnitValue.createPercentArray(new float[] { 1, 3})).useAllAvailableWidth();
+            Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 3})).useAllAvailableWidth();
             cell = new Cell();
             cell.add(new Paragraph("Einsatz-ID:"));
             cell.setFont(bold);
@@ -298,41 +299,52 @@ public class EinsatzPDF {
                 document.add(mapImage);
             }
 
-            if (totalDistance >= 10000) {
-                System.out.println(route.summary);
-                System.out.println(route.copyrights);
-                System.out.println(route.toString());
+//            if (totalDistance >= 10000) {
+            if (totalDistance >= 0) {
+                document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                document.add(headerTable);
+                document.add(new Paragraph(" "));
+                document.add(new Paragraph(" "));
+
+
+                Table routeTable = new Table(UnitValue.createPercentArray(new float[] { 1, 5})).useAllAvailableWidth();
 
                 for (DirectionsLeg routeLeg : route.legs) {
-                    System.out.println("Leg:");
-                    System.out.println(routeLeg.toString());
-                    System.out.println("Start: " + routeLeg.startAddress);
-                    System.out.println("End: " + routeLeg.endAddress);
-                    System.out.println("Distance: " + routeLeg.distance.humanReadable);
-
-                    if (routeLeg.duration != null) {
-                        System.out.println("duration: " + routeLeg.duration.humanReadable);
-                    }
-                    if (routeLeg.durationInTraffic != null) {
-                        System.out.println("durationInTraffic: " + routeLeg.durationInTraffic.humanReadable);
-                    }
-                    System.out.println("");
-                    System.out.println("Steps:");
                     for (DirectionsStep step : routeLeg.steps) {
-                        System.out.println("    htmlInstructions: " + step.htmlInstructions);
-                        System.out.println("    distance: " + step.distance.humanReadable);
-                        System.out.println("    duration: " + step.duration.humanReadable);
-                        System.out.println("    travelMode: " + step.travelMode.toString());
+                        cell = new Cell();
+                        cell.add(new Paragraph(step.distance.humanReadable));
+                        cell.setBorder(Border.NO_BORDER);
+                        routeTable.addCell(cell);
 
-                        System.out.println("++++++");
+                        cell = new Cell();
+                        System.out.println("Step: " + step.htmlInstructions);
+                        Paragraph instructions = new Paragraph();
+                        Pattern patter = Pattern.compile("^(([^<]+)?((<[^>]+>))([^<]*)(<[^>]+>))+([^<]+)?$");
+                        Matcher matcher = patter.matcher(step.htmlInstructions);
+
+                        int count = 0;
+                        while (matcher.find()) {
+                            count++;
+                            System.out.println("Count: " + count);
+                            System.out.print("Start index: " + matcher.start());
+                            System.out.print(" End index: " + matcher.end() + " ");
+                            System.out.println(matcher.group());
+                        }
+                        instructions.add(step.htmlInstructions);
+                        cell.add(instructions);
+                        cell.setBorder(Border.NO_BORDER);
+                        routeTable.addCell(cell);
                     }
 
                     System.out.println("######");
                 }
+
+                document.add(routeTable);
                 System.out.println("-----");
             }
 
             document.close();
+            pdfDocument.close();
 
         } catch (IOException e) {
             e.printStackTrace();
