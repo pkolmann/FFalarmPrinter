@@ -20,18 +20,23 @@
         </dependency>
         <dependency>
             <groupId>com.itextpdf</groupId>
-            <artifactId>itext-pdfa</artifactId>
-            <version>5.5.13.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>itextpdf</artifactId>
-            <version>5.5.13.1</version>
+            <artifactId>layout</artifactId>
+            <version>7.1.11</version>
         </dependency>
         <dependency>
             <groupId>com.google.maps</groupId>
             <artifactId>google-maps-services</artifactId>
             <version>0.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>at.kolmann.java</groupId>
+            <artifactId>FFalarmPrinter</artifactId>
+            <version>0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>layout</artifactId>
+            <version>7.1.11</version>
         </dependency>
     </dependencies>
 

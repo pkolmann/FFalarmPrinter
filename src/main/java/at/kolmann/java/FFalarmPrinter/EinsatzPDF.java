@@ -4,24 +4,45 @@ import com.google.maps.ImageResult;
 import com.google.maps.model.DirectionsLeg;
 import com.google.maps.model.DirectionsRoute;
 import com.google.maps.model.DirectionsStep;
-import com.google.maps.model.Distance;
-import com.itextpdf.text.*;
-import com.itextpdf.text.pdf.*;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.geom.Rectangle;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfName;
+import com.itextpdf.kernel.pdf.PdfString;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.layout.LayoutArea;
+import com.itextpdf.layout.layout.LayoutContext;
+import com.itextpdf.layout.layout.LayoutResult;
+import com.itextpdf.layout.property.*;
+import com.itextpdf.layout.renderer.IRenderer;
 import org.json.JSONObject;
 
+import javax.lang.model.element.Element;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 
+import static com.google.maps.StaticMapsRequest.Markers.MarkersSize.small;
+
 public class EinsatzPDF {
-    private static Font catFont = new Font(Font.FontFamily.TIMES_ROMAN, 18, Font.BOLD);
-    private static Font redFont = new Font(Font.FontFamily.TIMES_ROMAN, 12, Font.NORMAL, BaseColor.RED);
-    private static Font subFont = new Font(Font.FontFamily.TIMES_ROMAN, 16, Font.BOLD);
-    private static Font smallBold = new Font(Font.FontFamily.TIMES_ROMAN, 12, Font.BOLD);
-    private static Font small = new Font(Font.FontFamily.TIMES_ROMAN, 12);
+//    private static Font catFont = new Font(Font.FontFamily.TIMES_ROMAN, 18, Font.BOLD);
+//    private static Font redFont = new Font(Font.FontFamily.TIMES_ROMAN, 12, Font.NORMAL, BaseColor.RED);
+//    private static Font subFont = new Font(Font.FontFamily.TIMES_ROMAN, 16, Font.BOLD);
+//    private static Font smallBold = new Font(Font.FontFamily.TIMES_ROMAN, 12, Font.BOLD);
+//    private static Font small = new Font(Font.FontFamily.TIMES_ROMAN, 12);
     private Config config;
+    protected PdfFont bold;
 
     public EinsatzPDF(Config config) { this.config = config; }
 
@@ -33,22 +54,23 @@ public class EinsatzPDF {
             ImageResult einsatzMap)
     {
         try {
+            bold = PdfFontFactory.createFont(StandardFonts.TIMES_BOLD);
             System.out.println("Saving PDF to " + fileName);
             // https://www.vogella.com/tutorials/JavaPDF/article.html
             // https://www.mikesdotnetting.com/article/82/itextsharp-adding-text-with-chunks-phrases-and-paragraphs
-            Document document = new Document();
-            PdfWriter.getInstance(document, new FileOutputStream(fileName));
-            document.open();
+            PdfDocument pdfDocument = new PdfDocument(new PdfWriter(fileName));
+            pdfDocument.getCatalog().put(PdfName.Title, new PdfString("FF Alarm " + einsatzID));
+            Document document = new Document(pdfDocument, new PageSize(PageSize.A4));
+            document.setFont(PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN));
+            document.setFontSize(12);
 
-            // Add Metadata
-            document.addTitle("FF Alarm " + einsatzID);
-
-
-
-            PdfPTable table = new PdfPTable(new float[] { 3, 1});
-            PdfPCell cell = new PdfPCell(new Phrase("FF Pitten Einsatzplan - " + einsatzID, catFont));
-            cell.setBorder(Rectangle.NO_BORDER);
-            cell.setVerticalAlignment(Element.ALIGN_JUSTIFIED_ALL);
+            Table table = new Table(UnitValue.createPercentArray(new float[] {3, 1})).useAllAvailableWidth();
+            Cell cell = new Cell();
+            cell.add(new Paragraph("FF Pitten Einsatzplan - " + einsatzID));
+            cell.setFontSize(22);
+            cell.setTextAlignment(TextAlignment.CENTER);
+            cell.setBorder(Border.NO_BORDER);
+            cell.setVerticalAlignment(VerticalAlignment.MIDDLE);
             table.addCell(cell);
 
             if (config.getString("FeuerwehrLogo") != null) {
@@ -61,58 +83,73 @@ public class EinsatzPDF {
                 }
 
                 if (imageFile.exists()) {
-                    Image logoImage = Image.getInstance(imageFileString);
-                    logoImage.setAlignment(Element.ALIGN_RIGHT);
+                    ImageData imageData = ImageDataFactory.create(imageFileString);
+                    Image logoImage = new Image(imageData);
                     logoImage.scaleAbsolute(50,50);
-                    cell = new PdfPCell(logoImage);
-                    cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-                    cell.setBorder(Rectangle.NO_BORDER);
+                    cell = new Cell();
+                    cell.add(logoImage);
+                    cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+                    cell.setBorder(Border.NO_BORDER);
                     table.addCell(cell);
                 }
             } else {
-                cell = new PdfPCell(new Phrase(""));
-                cell.setBorder(Rectangle.NO_BORDER);
+                cell = new Cell();
+                cell.add(new Paragraph(""));
+                cell.setBorder(Border.NO_BORDER);
                 table.addCell(cell);
             }
             document.add(table);
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph(" "));
 
             // Einsatz-ID
-            table = new PdfPTable(new float[] { 1, 3});
-            cell = new PdfPCell(new Paragraph("Einsatz-ID:", smallBold));
-            cell.setBorder(Rectangle.NO_BORDER);
-            cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            table = new Table(UnitValue.createPercentArray(new float[] { 1, 3})).useAllAvailableWidth();
+            cell = new Cell();
+            cell.add(new Paragraph("Einsatz-ID:"));
+            cell.setFont(bold);
+            cell.setBorder(Border.NO_BORDER);
+            cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
             table.addCell(cell);
-            cell = new PdfPCell(new Paragraph(einsatzID, small));
-            cell.setBorder(Rectangle.NO_BORDER);
+            cell = new Cell();
+            cell.add(new Paragraph(einsatzID));
+            cell.setBorder(Border.NO_BORDER);
             table.addCell(cell);
 
             // Alarmstufe
             if (einsatz.getString("Alarmstufe") != null) {
-                cell = new PdfPCell(new Paragraph("Alarmstufe:", smallBold));
-                cell.setBorder(Rectangle.NO_BORDER);
-                cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                cell = new Cell();
+                cell.add(new Paragraph("Alarmstufe:"));
+                cell.setFont(bold);
+                cell.setBorder(Border.NO_BORDER);
+                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 table.addCell(cell);
 
-                cell = new PdfPCell(new Paragraph(einsatz.getString("Alarmstufe"), small));
-                cell.setBorder(Rectangle.NO_BORDER);
+                cell = new Cell();
+                cell.add(new Paragraph(einsatz.getString("Alarmstufe")));
+                cell.setBorder(Border.NO_BORDER);
                 table.addCell(cell);
             }
 
             // Meldebild
             if (einsatz.getString("Meldebild") != null) {
-                cell = new PdfPCell(new Paragraph("Meldebild:", smallBold));
-                cell.setBorder(Rectangle.NO_BORDER);
-                cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                cell = new Cell();
+                cell.add(new Paragraph("Meldebild:"));
+                cell.setFont(bold);
+                cell.setBorder(Border.NO_BORDER);
+                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 table.addCell(cell);
-                cell = new PdfPCell(new Paragraph(einsatz.getString("Meldebild"), small));
-                cell.setBorder(Rectangle.NO_BORDER);
+                cell = new Cell();
+                cell.add(new Paragraph(einsatz.getString("Meldebild")));
+                cell.setBorder(Border.NO_BORDER);
                 table.addCell(cell);
             }
 
             // Einsatzadresse
-            cell = new PdfPCell(new Paragraph("Adresse:", smallBold));
-            cell.setBorder(Rectangle.NO_BORDER);
-            cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            cell = new Cell();
+            cell.add(new Paragraph("Adresse:"));
+            cell.setFont(bold);
+            cell.setBorder(Border.NO_BORDER);
+            cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
             table.addCell(cell);
 
             StringBuilder einsatzAdresse = new StringBuilder();
@@ -132,52 +169,62 @@ public class EinsatzPDF {
                 }
             }
 
-            cell = new PdfPCell(new Paragraph(einsatzAdresse.toString(), small));
-            cell.setBorder(Rectangle.NO_BORDER);
+            cell = new Cell();
+            cell.add(new Paragraph(einsatzAdresse.toString()));
+            cell.setBorder(Border.NO_BORDER);
             table.addCell(cell);
 
             // Melder
             if (einsatz.getString("Melder") != null) {
-                cell = new PdfPCell(new Paragraph("Melder:", smallBold));
-                cell.setBorder(Rectangle.NO_BORDER);
-                cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                cell = new Cell();
+                cell.add(new Paragraph("Melder:"));
+                cell.setFont(bold);
+                cell.setBorder(Border.NO_BORDER);
+                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 table.addCell(cell);
 
-                cell = new PdfPCell(new Paragraph(einsatz.getString("Melder"), small));
-                cell.setBorder(Rectangle.NO_BORDER);
+                cell = new Cell();
+                cell.add(new Paragraph(einsatz.getString("Melder")));
+                cell.setBorder(Border.NO_BORDER);
                 table.addCell(cell);
             }
 
             // Bemerkung
             if (einsatz.getString("Bemerkung") != null) {
-                cell = new PdfPCell(new Paragraph("Bemerkung:", smallBold));
-                cell.setBorder(Rectangle.NO_BORDER);
-                cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                cell = new Cell();
+                cell.add(new Paragraph("Bemerkung:"));
+                cell.setFont(bold);
+                cell.setBorder(Border.NO_BORDER);
+                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 table.addCell(cell);
 
-                cell = new PdfPCell(new Paragraph(einsatz.getString("Bemerkung"), small));
-                cell.setBorder(Rectangle.NO_BORDER);
+                cell = new Cell();
+                cell.add(new Paragraph(einsatz.getString("Bemerkung")));
+                cell.setBorder(Border.NO_BORDER);
                 table.addCell(cell);
             }
 
             // Einsatzbeginn
             if (einsatz.getString("EinsatzErzeugt") != null) {
-                cell = new PdfPCell(new Paragraph("Einsatzbeginn:", smallBold));
-                cell.setBorder(Rectangle.NO_BORDER);
-                cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                cell = new Cell();
+                cell.add(new Paragraph("Einsatzbeginn:"));
+                cell.setFont(bold);
+                cell.setBorder(Border.NO_BORDER);
+                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 table.addCell(cell);
 
-                cell = new PdfPCell(new Paragraph(einsatz.getString("EinsatzErzeugt")
-                        .replace('T', ' '), small));
-                cell.setBorder(Rectangle.NO_BORDER);
+                cell = new Cell();
+                cell.add(new Paragraph(einsatz.getString("EinsatzErzeugt")
+                        .replace('T', ' ')));
+                cell.setBorder(Border.NO_BORDER);
                 table.addCell(cell);
             }
 
             // Wegstrecke
-            if (route != null) {
-                long totalDistance = 0;
-                long totalDurtion = 0;
+            long totalDistance = 0;
+            long totalDurtion = 0;
 
+            if (route != null) {
                 for (DirectionsLeg routeLeg : route.legs) {
                     totalDistance += routeLeg.distance.inMeters;
                     if (routeLeg.duration != null) {
@@ -186,20 +233,25 @@ public class EinsatzPDF {
                 }
 
                 // Wegstrecke
-                cell = new PdfPCell(new Paragraph("Wegstrecke:", smallBold));
-                cell.setBorder(Rectangle.NO_BORDER);
-                cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                cell = new Cell();
+                cell.add(new Paragraph("Wegstrecke:"));
+                cell.setFont(bold);
+                cell.setBorder(Border.NO_BORDER);
+                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 table.addCell(cell);
 
                 DecimalFormat df = new DecimalFormat("#.#");
-                cell = new PdfPCell(new Paragraph(df.format(totalDistance / 1000.0f) + " km", small));
-                cell.setBorder(Rectangle.NO_BORDER);
+                cell = new Cell();
+                cell.add(new Paragraph(df.format(totalDistance / 1000.0f) + " km"));
+                cell.setBorder(Border.NO_BORDER);
                 table.addCell(cell);
 
                 // Wegzeit
-                cell = new PdfPCell(new Paragraph("Wegzeit:", smallBold));
-                cell.setBorder(Rectangle.NO_BORDER);
-                cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                cell = new Cell();
+                cell.add(new Paragraph("Wegzeit:"));
+                cell.setFont(bold);
+                cell.setBorder(Border.NO_BORDER);
+                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 table.addCell(cell);
 
                 StringBuilder totals = new StringBuilder();
@@ -222,27 +274,31 @@ public class EinsatzPDF {
                         totals.append("n");
                     }
                 }
-                cell = new PdfPCell(new Paragraph(totals.toString(), small));
-                cell.setBorder(Rectangle.NO_BORDER);
+                cell = new Cell();
+                cell.add(new Paragraph(totals.toString()));
+                cell.setBorder(Border.NO_BORDER);
                 table.addCell(cell);
             }
             document.add(table);
 
-            document.add(new Paragraph(" "));
+            Paragraph p = new Paragraph(" ");
+            document.add(p);
+            IRenderer pRenderer = p.createRendererSubTree().setParent(document.getRenderer());
+            LayoutResult pLayoutResult = pRenderer.layout(new LayoutContext(new LayoutArea(0, new Rectangle(595-72, 842-72))));
 
-            // Add Map image
-            Image mapImage = Image.getInstance(einsatzMap.imageData);
-            System.out.println("Document width: " + document.getPageSize().getWidth());
-            System.out.println("Image width: " + mapImage.getWidth());
-            float scaleFactor = (document.getPageSize().getWidth() / mapImage.getWidth()) * 75;
-            System.out.println("Scale factor: " + scaleFactor);
-            mapImage.scalePercent(scaleFactor);
-            mapImage.setAlignment(Element.ALIGN_CENTER);
-            document.add(mapImage);
-
-            document.close();
+            float y = pLayoutResult.getOccupiedArea().getBBox().getY();
+            float x = pLayoutResult.getOccupiedArea().getBBox().getX();
 
             if (route != null) {
+                // Add Map image
+                ImageData imageData = ImageDataFactory.create(einsatzMap.imageData);
+                Image mapImage = new Image(imageData);
+                mapImage.setAutoScale(true);
+                mapImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+                document.add(mapImage);
+            }
+
+            if (totalDistance >= 10000) {
                 System.out.println(route.summary);
                 System.out.println(route.copyrights);
                 System.out.println(route.toString());
@@ -275,10 +331,9 @@ public class EinsatzPDF {
                 }
                 System.out.println("-----");
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (DocumentException e) {
-            e.printStackTrace();
+
+            document.close();
+
         } catch (IOException e) {
             e.printStackTrace();
         }
