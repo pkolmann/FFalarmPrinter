@@ -299,48 +299,82 @@ public class EinsatzPDF {
                 document.add(mapImage);
             }
 
-//            if (totalDistance >= 10000) {
-            if (totalDistance >= 0) {
+            if (totalDistance >= 10000) {
                 document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
                 document.add(headerTable);
                 document.add(new Paragraph(" "));
                 document.add(new Paragraph(" "));
 
-
-                Table routeTable = new Table(UnitValue.createPercentArray(new float[] { 1, 5})).useAllAvailableWidth();
+                Table routeTable = new Table(UnitValue.createPercentArray(new float[] {5, 1})).useAllAvailableWidth();
 
                 for (DirectionsLeg routeLeg : route.legs) {
                     for (DirectionsStep step : routeLeg.steps) {
-                        cell = new Cell();
-                        cell.add(new Paragraph(step.distance.humanReadable));
-                        cell.setBorder(Border.NO_BORDER);
-                        routeTable.addCell(cell);
+                        System.out.println(step.htmlInstructions);
 
                         cell = new Cell();
-                        System.out.println("Step: " + step.htmlInstructions);
                         Paragraph instructions = new Paragraph();
-                        Pattern patter = Pattern.compile("^(([^<]+)?((<[^>]+>))([^<]*)(<[^>]+>))+([^<]+)?$");
+                        Pattern patter = Pattern.compile("(<[^>]+>)");
                         Matcher matcher = patter.matcher(step.htmlInstructions);
 
-                        int count = 0;
+                        int pos = 0;
+                        String text = "";
+                        boolean isBold = false;
+                        boolean lastCharIsSpace = false;
+                        int boldStart = 0;
                         while (matcher.find()) {
-                            count++;
-                            System.out.println("Count: " + count);
-                            System.out.print("Start index: " + matcher.start());
-                            System.out.print(" End index: " + matcher.end() + " ");
-                            System.out.println(matcher.group());
+                            if (pos < matcher.start() && !isBold) {
+                                if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
+                                    instructions.add(new Text(" "));
+                                }
+                                instructions.add(new Text(step.htmlInstructions.substring(pos, matcher.start())));
+                                pos = matcher.start();
+                                lastCharIsSpace = checkIfLastCharIsSpace(step.htmlInstructions, pos);
+                            }
+
+                            String marker = matcher.group();
+                            if (marker.equals("<b>")) {
+                                isBold = true;
+                                boldStart = matcher.end();
+                                pos = matcher.end();
+                            } else if (marker.equals("</b>")) {
+                                if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
+                                    instructions.add(new Text(" "));
+                                }
+                                Text boldText = new Text(step.htmlInstructions.substring(boldStart, matcher.start()));
+                                boldText.setFont(bold);
+                                instructions.add(boldText);
+                                pos = matcher.end();
+                                lastCharIsSpace = checkIfLastCharIsSpace(step.htmlInstructions, pos);
+                                isBold = false;
+                                boldStart = 0;
+                            } else {
+                                pos = matcher.end();
+                            }
                         }
-                        instructions.add(step.htmlInstructions);
+
+                        if (pos < step.htmlInstructions.length()) {
+                            if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
+                                instructions.add(new Text(" "));
+                            }
+                            instructions.add(new Text(step.htmlInstructions.substring(pos)));
+                        }
+
                         cell.add(instructions);
                         cell.setBorder(Border.NO_BORDER);
                         routeTable.addCell(cell);
+
+                        cell = new Cell();
+                        cell.add(new Paragraph(step.distance.humanReadable)
+                                .setHorizontalAlignment(HorizontalAlignment.RIGHT)
+                        );
+                        cell.setBorder(Border.NO_BORDER);
+                        cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+                        routeTable.addCell(cell);
                     }
 
-                    System.out.println("######");
                 }
 
                 document.add(routeTable);
-                System.out.println("-----");
             }
 
             document.close();
@@ -355,5 +389,11 @@ public class EinsatzPDF {
         for (int i = 0; i < number; i++) {
             paragraph.add(new Paragraph(" "));
         }
+    }
+
+    private static boolean checkIfLastCharIsSpace(String string, int pos) {
+        return string.startsWith(" ", pos - 1) ||
+               string.startsWith("(", pos - 1) ||
+               string.startsWith(")", pos - 1);
     }
 }

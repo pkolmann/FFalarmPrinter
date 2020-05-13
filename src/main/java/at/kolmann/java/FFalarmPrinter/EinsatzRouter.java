@@ -118,6 +118,8 @@ public class EinsatzRouter {
 
                     mapsImage = new StaticMapsRequest(context)
                             .path(route.overviewPolyline)
+                            .center(destination)
+                            .zoom(15)
                             .markers(markerA)
                             .markers(markerE)
                             .format(StaticMapsRequest.ImageFormat.png)
@@ -125,7 +127,6 @@ public class EinsatzRouter {
                             .language("de")
                             .size(new Size(1280, 960))
                             .await();
-
                 }
 
             } catch (Exception e) {
