@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 public class PersistentCookieStore implements CookieStore, Runnable {
-    private CookieStore store;
-    private String filePath;
-    private String fileName;
+    private final CookieStore store;
+    private final String filePath;
+    private final String fileName;
 
     public PersistentCookieStore(String filePath, String fileName) {
         this.filePath = filePath;
@@ -75,13 +75,8 @@ public class PersistentCookieStore implements CookieStore, Runnable {
 
                     store.add(new URI(cookieURI), cookie);
                 }
-            } catch (FileNotFoundException e) {
+            } catch (URISyntaxException | IOException e) {
                 // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
         }

@@ -1,21 +1,20 @@
 package at.kolmann.java.FFalarmPrinter;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.*;
 import java.util.Calendar;
 
 public class EinsatzData {
-    Config config;
-    Einsatz einsatz;
+    final Config config;
+    final Einsatz einsatz;
 
     public EinsatzData(Config config) {
         this.config = config;
         this.einsatz = new Einsatz(config);
     }
 
-    public int process(JSONArray einsatzData) {
+    public void process(JSONArray einsatzData) {
         Calendar myCal = Calendar.getInstance();
         String yearString = String.format(("%tY"), myCal);
         String alarmString = String.format(("alarm-%tY%<tm%<td-%<tH%<tM%<tS"), myCal);
@@ -58,10 +57,5 @@ public class EinsatzData {
             System.out.println("========");
         }
 
-        return 0;
-    }
-
-    public void shutdown() {
-        einsatz.shutdown();
     }
 }

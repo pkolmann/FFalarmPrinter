@@ -9,10 +9,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class Einsatz {
-    private Config config;
-    private EinsatzPDF einsatzPDF;
-    private EinsatzHTML einsatzHTML;
-    private EinsatzPrint einsatzPrint;
+    private final Config config;
+    private final EinsatzPDF einsatzPDF;
+    private final EinsatzHTML einsatzHTML;
+    private final EinsatzPrint einsatzPrint;
 
     public Einsatz(Config config) {
         this.config = config;
@@ -21,7 +21,7 @@ public class Einsatz {
         einsatzPrint = new EinsatzPrint(config);
     }
 
-    public int process(JSONObject einsatz, String alarmPath) {
+    public void process(JSONObject einsatz, String alarmPath) {
         String einsatzID = einsatz.getString("EinsatzID");
         System.out.println(einsatzID);
 
@@ -69,10 +69,6 @@ public class Einsatz {
             einsatzRouter.shutdown();
         }
 
-        return 0;
-    }
-
-    public void shutdown() {
     }
 
     private String getEinsatzAdresse(JSONObject einsatz) {

@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 public class EinsatzHTML {
-    private Config config;
+    private final Config config;
 
     public EinsatzHTML(Config config) {this.config = config;}
 
@@ -74,7 +74,7 @@ public class EinsatzHTML {
         info.append("    Einsatz-ID:\n");
         info.append("  </div>\n");
         info.append("  <div class=\"rechts\">\n");
-        info.append("   " + einsatzID + "\n");
+        info.append("   ").append(einsatzID).append("\n");
         info.append("  </div>\n");
         info.append("</div>\n");
 
@@ -83,7 +83,7 @@ public class EinsatzHTML {
         info.append("    Alarmstufe:\n");
         info.append("  </div>\n");
         info.append("  <div class=\"rechts\">\n");
-        info.append("    " + einsatz.getString("Alarmstufe") + "\n");
+        info.append("    ").append(einsatz.getString("Alarmstufe")).append("\n");
         info.append("  </div>\n");
         info.append("</div>\n");
 
@@ -92,8 +92,8 @@ public class EinsatzHTML {
         info.append("    Meldebild:\n");
         info.append("  </div>\n");
         info.append("  <div class=\"rechts\">\n");
-        info.append("    " + einsatz.getString("Meldebild")
-                .replaceAll("\n", "<br />"+System.lineSeparator())+ "\n");
+        info.append("    ").append(einsatz.getString("Meldebild")
+                .replaceAll("\n", "<br />" + System.lineSeparator())).append("\n");
         info.append("  </div>\n");
         info.append("</div>\n");
 
@@ -104,7 +104,7 @@ public class EinsatzHTML {
             info.append("  </div>\n");
             info.append("  <div class=\"rechts\">\n");
             if (einsatz.has("Abschnitt")) {
-                info.append("    " + einsatz.getString("Abschnitt") + "<br />\n");
+                info.append("    ").append(einsatz.getString("Abschnitt")).append("<br />\n");
             }
             if (einsatz.has("Nummer1")) {
                 long nr = einsatz.getLong("Nummer1");
@@ -113,9 +113,9 @@ public class EinsatzHTML {
                 } else if (nr > 100) {
                     nr /= 10;
                 }
-                info.append("    Baukilometer: " +  nr + "<br />\n");
+                info.append("    Baukilometer: ").append(nr).append("<br />\n");
             }
-            info.append("    " + einsatz.getString("Ort") + "\n");
+            info.append("    ").append(einsatz.getString("Ort")).append("\n");
             info.append("  </div>\n");
             info.append("</div>\n");
         } else {
@@ -135,8 +135,8 @@ public class EinsatzHTML {
             info.append("    Melder:\n");
             info.append("  </div>\n");
             info.append("  <div class=\"rechts\">\n");
-            info.append("    " + einsatz.getString("Melder")
-                    .replaceAll("\n", "<br />"+System.lineSeparator()) + "<br />\n");
+            info.append("    ").append(einsatz.getString("Melder")
+                    .replaceAll("\n", "<br />" + System.lineSeparator())).append("<br />\n");
             info.append("  </div>\n");
             info.append("</div>\n");
         }
@@ -147,8 +147,8 @@ public class EinsatzHTML {
             info.append("    Bemerkung:\n");
             info.append("  </div>\n");
             info.append("  <div class=\"rechts\">\n");
-            info.append("    " + einsatz.getString("Bemerkung")
-                    .replaceAll("\n", "<br />"+System.lineSeparator()) + "<br />\n");
+            info.append("    ").append(einsatz.getString("Bemerkung")
+                    .replaceAll("\n", "<br />" + System.lineSeparator())).append("<br />\n");
             info.append("  </div>\n");
             info.append("</div>\n");
         }
@@ -158,7 +158,7 @@ public class EinsatzHTML {
         info.append("    Einsatzbeginn:\n");
         info.append("  </div>\n");
         info.append("  <div class=\"rechts\">\n");
-        info.append("    " + einsatz.getString("EinsatzErzeugt").replace('T', ' ') + "\n");
+        info.append("    ").append(einsatz.getString("EinsatzErzeugt").replace('T', ' ')).append("\n");
         info.append("  </div>\n");
         info.append("</div>\n");
 

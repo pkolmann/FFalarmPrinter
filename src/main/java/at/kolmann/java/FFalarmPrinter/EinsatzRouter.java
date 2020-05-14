@@ -1,19 +1,15 @@
 package at.kolmann.java.FFalarmPrinter;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.maps.*;
 import com.google.maps.errors.ApiException;
 import com.google.maps.model.*;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class EinsatzRouter {
-    private Config config;
-    private GeoApiContext context;
-    private GeocodingResult[] start = null;
-    private DirectionsApiRequest directionsRequest;
+    private final Config config;
+    private final GeoApiContext context;
+    private final DirectionsApiRequest directionsRequest;
     private ImageResult mapsImage;
     private DirectionsResult result;
     private DirectionsRoute route;
@@ -25,27 +21,6 @@ public class EinsatzRouter {
                 .apiKey(config.getString("googleMapsApiKey"))
                 .disableRetries()
                 .build();
-
-        try {
-            if (config.get("FeuerwehrhausLocationLat") == null ||
-                    config.get("FeuerwehrhausLocationLon") == null) {
-                System.out.println("Keine Feuerwehrhaus-Location angegeben!");
-            }
-            start = GeocodingApi.newRequest(context)
-                    .latlng(
-                            new LatLng(
-                                    config.getDouble("FeuerwehrhausLocationLat"),
-                                    config.getDouble("FeuerwehrhausLocationLon")
-                            )
-                    )
-                    .await();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ApiException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         directionsRequest = new DirectionsApiRequest(context);
     }
@@ -91,11 +66,7 @@ public class EinsatzRouter {
                         .language("de-AT")
                         .await();
             }
-        } catch (ApiException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ApiException | IOException | InterruptedException e) {
             e.printStackTrace();
         }
 

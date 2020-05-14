@@ -1,6 +1,5 @@
 package at.kolmann.java.FFalarmPrinter;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;

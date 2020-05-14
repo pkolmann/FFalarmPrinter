@@ -25,17 +25,14 @@ import com.itextpdf.layout.property.*;
 import com.itextpdf.layout.renderer.IRenderer;
 import org.json.JSONObject;
 
-import javax.lang.model.element.Element;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.google.maps.StaticMapsRequest.Markers.MarkersSize.small;
-
 public class EinsatzPDF {
-    private Config config;
+    private final Config config;
     protected PdfFont bold;
     private Matcher matcher;
 
@@ -155,7 +152,7 @@ public class EinsatzPDF {
             if (einsatz.has("Strasse") && einsatz.getString("Strasse").contains("A2")) {
                 StringBuilder autobahn = new StringBuilder();
                 if (einsatz.has("Abschnitt")) {
-                    autobahn.append(einsatz.getString("Abschnitt") + System.lineSeparator());
+                    autobahn.append(einsatz.getString("Abschnitt")).append(System.lineSeparator());
                 }
                 if (einsatz.has("Nummer1")) {
                     long nr = einsatz.getLong("Nummer1");
@@ -164,9 +161,9 @@ public class EinsatzPDF {
                     } else if (nr > 100) {
                         nr /= 10;
                     }
-                    autobahn.append("Baukilometer: " +  nr + System.lineSeparator());
+                    autobahn.append("Baukilometer: ").append(nr).append(System.lineSeparator());
                 }
-                autobahn.append(einsatz.getString("Ort") + System.lineSeparator());
+                autobahn.append(einsatz.getString("Ort")).append(System.lineSeparator());
                 cell.add(new Paragraph(autobahn.toString()));
             } else {
                 cell.add(new Paragraph(einsatzAdresse));

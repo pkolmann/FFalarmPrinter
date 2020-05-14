@@ -1,6 +1,5 @@
 #page {
     -moz-background-clip:border;
-    -moz-background-inline-policy:continuous;
     -moz-background-origin:padding;
     background:#FFFFFF none repeat scroll 0 0;
     border-color:#999999;
@@ -14,7 +13,6 @@
 #header {
     display:block;
     left:0;
-    margin-bottom:0.3em;
     position:relative;
     top:0;
     background:transparent url(FF-logo.jpg) no-repeat scroll right center;
@@ -59,12 +57,6 @@
 
 #directionsPanel {
     display: none;
-}
-
-#svn_version {
-    float: right;
-    font-size: 0.5em;
-    color: #969696;
 }
 
 #div-generiert {

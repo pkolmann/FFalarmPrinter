@@ -5,12 +5,11 @@ import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Sides;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 
 public class EinsatzPrint {
-    private Config config;
+    private final Config config;
 
     public EinsatzPrint(Config config) {
         this.config = config;

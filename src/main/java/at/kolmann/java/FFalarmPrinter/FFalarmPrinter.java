@@ -1,25 +1,19 @@
 package at.kolmann.java.FFalarmPrinter;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.List;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 public class FFalarmPrinter {
-    private Florian10Fetcher florian10Fetcher;
-    private Config config;
-    EinsatzData einsatzData;
-    final Logger logger;
-
+    private final Florian10Fetcher florian10Fetcher;
+    private final Config config;
+    private final EinsatzData einsatzData;
 
     public FFalarmPrinter() {
         config = new Config();
-        logger = LoggerFactory.getLogger(FFalarmPrinter.class);
+        Logger logger = LoggerFactory.getLogger(FFalarmPrinter.class);
         String cookieFile = null;
         if (config.get("cookieFile") instanceof String) {
             cookieFile = (String) config.get("cookieFile");
@@ -74,7 +68,5 @@ public class FFalarmPrinter {
             }
 
         }
-
-        einsatzData.shutdown();
     }
 }

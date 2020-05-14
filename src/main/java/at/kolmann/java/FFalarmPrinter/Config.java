@@ -40,8 +40,6 @@ public class Config {
                     configString.append(line);
                 }
 
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
