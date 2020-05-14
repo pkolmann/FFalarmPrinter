@@ -35,21 +35,17 @@ import java.util.regex.Pattern;
 import static com.google.maps.StaticMapsRequest.Markers.MarkersSize.small;
 
 public class EinsatzPDF {
-//    private static Font catFont = new Font(Font.FontFamily.TIMES_ROMAN, 18, Font.BOLD);
-//    private static Font redFont = new Font(Font.FontFamily.TIMES_ROMAN, 12, Font.NORMAL, BaseColor.RED);
-//    private static Font subFont = new Font(Font.FontFamily.TIMES_ROMAN, 16, Font.BOLD);
-//    private static Font smallBold = new Font(Font.FontFamily.TIMES_ROMAN, 12, Font.BOLD);
-//    private static Font small = new Font(Font.FontFamily.TIMES_ROMAN, 12);
     private Config config;
     protected PdfFont bold;
     private Matcher matcher;
 
     public EinsatzPDF(Config config) { this.config = config; }
 
-    public void saveEinsatzPDF(
+    public void saveEinsatz(
             String fileName,
             String einsatzID,
             JSONObject einsatz,
+            String einsatzAdresse,
             DirectionsRoute route,
             ImageResult einsatzMap)
     {
@@ -153,27 +149,34 @@ public class EinsatzPDF {
             cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
             table.addCell(cell);
 
-            StringBuilder einsatzAdresse = new StringBuilder();
-            if (einsatz.has("Strasse")) {
-                einsatzAdresse.append(einsatz.getString("Strasse"));
-                if (einsatz.has("Nummer1")) {
-                    einsatzAdresse.append(" ");
-                    einsatzAdresse.append(einsatz.getString("Nummer1"));
-                }
-            }
-            if (einsatz.has("Plz")) {
-                einsatzAdresse.append(System.lineSeparator());
-                einsatzAdresse.append(einsatz.getString("Plz"));
-                if (einsatz.has("Ort")) {
-                    einsatzAdresse.append(" ");
-                    einsatzAdresse.append(einsatz.getString("Ort"));
-                }
-            }
-
             cell = new Cell();
-            cell.add(new Paragraph(einsatzAdresse.toString()));
+            cell.add(new Paragraph(einsatzAdresse));
+
+            if (einsatz.has("Strasse") && einsatz.getString("Strasse").contains("A2")) {
+                StringBuilder autobahn = new StringBuilder();
+                if (einsatz.has("Abschnitt")) {
+                    autobahn.append(einsatz.getString("Abschnitt") + System.lineSeparator());
+                }
+                if (einsatz.has("Nummer1")) {
+                    long nr = einsatz.getLong("Nummer1");
+                    if (nr > 1000) {
+                        nr /= 100;
+                    } else if (nr > 100) {
+                        nr /= 10;
+                    }
+                    autobahn.append("Baukilometer: " +  nr + System.lineSeparator());
+                }
+                autobahn.append(einsatz.getString("Ort") + System.lineSeparator());
+                cell.add(new Paragraph(autobahn.toString()));
+            } else {
+                cell.add(new Paragraph(einsatzAdresse));
+            }
             cell.setBorder(Border.NO_BORDER);
             table.addCell(cell);
+
+
+
+
 
             // Melder
             if (einsatz.getString("Melder") != null) {

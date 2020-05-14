@@ -111,15 +111,22 @@ public class EinsatzRouter {
                             config.getDouble("FeuerwehrhausLocationLon")
                     ));
                     markerA.label("A");
-                    
+
                     StaticMapsRequest.Markers markerE = new StaticMapsRequest.Markers();
                     markerE.addLocation(destination);
                     markerE.label("E");
 
+                    int mapZoom = 13;
+                    if (route.legs[0].distance.inMeters < 5000) {
+                        mapZoom = 15;
+                    } else if (route.legs[0].distance.inMeters < 20000) {
+                        mapZoom = 14;
+                    }
+
                     mapsImage = new StaticMapsRequest(context)
                             .path(route.overviewPolyline)
                             .center(destination)
-                            .zoom(15)
+                            .zoom(mapZoom)
                             .markers(markerA)
                             .markers(markerE)
                             .format(StaticMapsRequest.ImageFormat.png)

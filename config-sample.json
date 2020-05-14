@@ -15,6 +15,9 @@
   "_comment_GoogleMapsApiKey": "Add your google Maps api key",
   "googleMapsApiKey": "xxxx",
   
+  "_comment_GoogleMapsApiKeyWeb": "Possible different API Key for HTML pages available via web",
+  "googleMapsApiKeyWeb": null,
+  
   "_comment_FeuerwehrhausLocation": "Location des eigenen Feuerwehrhauses für Routing",
   "FeuerwehrhausLocationLat": 47.0,
   "FeuerwehrhausLocationLon": 16.0,
@@ -23,6 +26,12 @@
   "FeuerwehrhausLocationWaypoint": null,
   
   "_comment_FeuerwehrLogo": "Path to a logo to be added to alarm file",
-  "FeuerwehrLogo": "FF-logo.jpg"
+  "FeuerwehrLogo": "FF-logo.jpg",
+  
+  "_comment_htmlTemplateFile": "Template file for HTML Einsatz Report",
+  "htmlTemplateFile": "template.html",
+  
+  "_comment_printerName": "If specified, the EinsatzPDF will be printed. Printer needs to be able to print PDF itself",
+  "printerName": null
   
 }

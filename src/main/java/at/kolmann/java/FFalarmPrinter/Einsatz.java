@@ -1,49 +1,36 @@
 package at.kolmann.java.FFalarmPrinter;
 
 import com.google.maps.ImageResult;
-import com.google.maps.StaticMapsRequest;
 import com.google.maps.model.*;
 import org.json.JSONObject;
 
+import javax.print.PrintException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class Einsatz {
     private Config config;
     private EinsatzPDF einsatzPDF;
+    private EinsatzHTML einsatzHTML;
+    private EinsatzPrint einsatzPrint;
 
     public Einsatz(Config config) {
         this.config = config;
         einsatzPDF = new EinsatzPDF(config);
+        einsatzHTML = new EinsatzHTML(config);
+        einsatzPrint = new EinsatzPrint(config);
     }
 
     public int process(JSONObject einsatz, String alarmPath) {
         String einsatzID = einsatz.getString("EinsatzID");
         System.out.println(einsatzID);
 
-        StringBuilder einsatzAdresse = new StringBuilder();
-        if (einsatz.has("Strasse")) {
-            einsatzAdresse.append(einsatz.getString("Strasse"));
-            if (einsatz.has("Nummer1")) {
-                einsatzAdresse.append(" ");
-                einsatzAdresse.append(einsatz.getString("Nummer1"));
-            }
-        }
-        if (einsatz.has("Plz")) {
-            if (einsatzAdresse.length() > 0) {
-                einsatzAdresse.append(", ");
-            }
-            einsatzAdresse.append(einsatz.getString("Plz"));
-            if (einsatz.has("Ort")) {
-                einsatzAdresse.append(" ");
-                einsatzAdresse.append(einsatz.getString("Ort"));
-            }
-        }
+        String einsatzAdresse = getEinsatzAdresse(einsatz);
 
         if (einsatzAdresse.length() > 0) {
             EinsatzRouter einsatzRouter = new EinsatzRouter(config);
             //DirectionsRoute route = null;
-            DirectionsRoute route = einsatzRouter.getRoute(einsatzAdresse.toString());
+            DirectionsRoute route = einsatzRouter.getRoute(einsatzAdresse);
 
             ImageResult einsatzMap = einsatzRouter.getMapsImage();
             if (einsatzMap != null) {
@@ -55,13 +42,29 @@ public class Einsatz {
                 }
             }
 
-            einsatzPDF.saveEinsatzPDF(
+            einsatzPDF.saveEinsatz(
                     alarmPath+".pdf",
                     einsatzID,
                     einsatz,
+                    getEinsatzAdresse(einsatz),
                     route,
                     einsatzMap
             );
+
+            einsatzHTML.saveEinsatz(
+                    alarmPath + ".html",
+                    einsatzID,
+                    einsatz,
+                    getEinsatzAdresse(einsatz),
+                    route,
+                    einsatzMap
+            );
+
+            try {
+                einsatzPrint.process(alarmPath+".pdf");
+            } catch (IOException | PrintException e) {
+                e.printStackTrace();
+            }
 
             einsatzRouter.shutdown();
         }
@@ -70,5 +73,37 @@ public class Einsatz {
     }
 
     public void shutdown() {
+    }
+
+    private String getEinsatzAdresse(JSONObject einsatz) {
+        StringBuilder einsatzAdresse = new StringBuilder();
+        if (einsatz.has("Strasse") && einsatz.getString("Strasse").contains("A2")) {
+            einsatzAdresse.append("A2, 2824 Seebenstein, Austria");
+        } else {
+            if (einsatz.has("Objekt")) {
+                einsatzAdresse.append(einsatz.getString("Objekt"));
+            }
+            if (einsatz.has("Strasse")) {
+                if (einsatzAdresse.length() > 0) {
+                    einsatzAdresse.append(System.lineSeparator());
+                }
+                einsatzAdresse.append(einsatz.getString("Strasse"));
+                if (einsatz.has("Nummer1")) {
+                    einsatzAdresse.append(" ");
+                    einsatzAdresse.append(einsatz.getString("Nummer1"));
+                }
+            }
+            if (einsatz.has("Plz")) {
+                if (einsatzAdresse.length() > 0) {
+                    einsatzAdresse.append(System.lineSeparator());
+                }
+                einsatzAdresse.append(einsatz.getString("Plz"));
+                if (einsatz.has("Ort")) {
+                    einsatzAdresse.append(" ");
+                    einsatzAdresse.append(einsatz.getString("Ort"));
+                }
+            }
+        }
+        return einsatzAdresse.toString();
     }
 }

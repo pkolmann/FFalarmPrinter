@@ -17,13 +17,12 @@ public class EinsatzData {
 
     public int process(JSONArray einsatzData) {
         Calendar myCal = Calendar.getInstance();
+        String yearString = String.format(("%tY"), myCal);
         String alarmString = String.format(("alarm-%tY%<tm%<td-%<tH%<tM%<tS"), myCal);
-        String savePath = null;
+        String savePath = config.getString("saveWEBlocation");
 
-        if (config.get("saveWEBlocation") instanceof String) {
-            savePath = (String) config.get("saveWEBlocation");
-        }
         if (savePath != null) {
+            savePath += File.separator + yearString;
             File savePathFile = new File(savePath);
             if (!savePathFile.isAbsolute()) {
                 savePath = System.getProperty("user.dir") + File.separator + savePath;
