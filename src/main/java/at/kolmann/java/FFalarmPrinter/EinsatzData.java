@@ -8,7 +8,7 @@ import java.util.Calendar;
 public class EinsatzData {
     final Config config;
     final Einsatz einsatz;
-    private LastEinsatzStore lastEinsatzStore;
+    private final LastEinsatzStore lastEinsatzStore;
 
     public EinsatzData(Config config) {
         this.config = config;

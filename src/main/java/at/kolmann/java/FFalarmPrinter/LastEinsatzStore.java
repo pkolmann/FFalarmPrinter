@@ -4,12 +4,10 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class LastEinsatzStore implements Runnable {
-    private Config config;
-    private ArrayList<String> lastEinsatz = new ArrayList<String>();
+    private final ArrayList<String> lastEinsatz = new ArrayList<>();
     private String lastEinsatzPath;
 
     public LastEinsatzStore(Config config) {
-        this.config = config;
 
         lastEinsatzPath = config.getString("lastEinsatzFile");
         if (lastEinsatzPath == null) {
@@ -57,7 +55,7 @@ public class LastEinsatzStore implements Runnable {
         lastEinsatz.clear();
     }
 
-    public ArrayList get() {
+    public ArrayList<String> get() {
         return lastEinsatz;
     }
 
