@@ -32,6 +32,9 @@
   "htmlTemplateFile": "template.html",
   
   "_comment_printerName": "If specified, the EinsatzPDF will be printed. Printer needs to be able to print PDF itself",
-  "printerName": null
+  "printerName": null,
+  
+  "_comment_LastEinsatzFile": "Filename where current Einsaetze will be saved, so only new Einsaetze will be printed.",
+  "lastEinsatzFile": "lastEinsatz.txt"
   
 }

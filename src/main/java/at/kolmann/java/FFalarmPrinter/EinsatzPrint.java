@@ -10,12 +10,19 @@ import java.util.Arrays;
 
 public class EinsatzPrint {
     private final Config config;
+    private final LastEinsatzStore lastEinsatzStore;
 
-    public EinsatzPrint(Config config) {
+    public EinsatzPrint(Config config, LastEinsatzStore lastEinsatzStore) {
         this.config = config;
+        this.lastEinsatzStore = lastEinsatzStore;
     }
 
-    public void process(String filePath) throws IOException, PrintException {
+    public void process(String einsatzID, String filePath) throws IOException, PrintException {
+        // Don't print, if this Einsatz has been processed before
+        if (lastEinsatzStore.contains(einsatzID)) {
+            return;
+        }
+
         String myPrinterName = config.getString("printerName");
         if (myPrinterName == null) {
             // No printer specified, ignoring the print request

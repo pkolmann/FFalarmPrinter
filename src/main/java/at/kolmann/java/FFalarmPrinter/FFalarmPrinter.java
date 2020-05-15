@@ -26,6 +26,8 @@ public class FFalarmPrinter {
     }
 
     public void run() {
+//        System.out.println(System.getProperty("os.name"));
+
         String urlToFetch = null;
         if (config.get("wastlUrl") instanceof String) {
             urlToFetch = (String) config.get("wastlUrl");

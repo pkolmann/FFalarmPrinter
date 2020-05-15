@@ -80,4 +80,8 @@ public class Config {
 
         throw new IOException("Key " + key + " is not a double!");
     }
+
+    public Boolean has(String key) {
+        return config.has(key);
+    }
 }

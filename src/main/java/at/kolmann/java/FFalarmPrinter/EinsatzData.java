@@ -8,10 +8,12 @@ import java.util.Calendar;
 public class EinsatzData {
     final Config config;
     final Einsatz einsatz;
+    private LastEinsatzStore lastEinsatzStore;
 
     public EinsatzData(Config config) {
         this.config = config;
-        this.einsatz = new Einsatz(config);
+        this.lastEinsatzStore = new LastEinsatzStore(config);
+        this.einsatz = new Einsatz(config, lastEinsatzStore);
     }
 
     public void process(JSONArray einsatzData) {
@@ -20,7 +22,7 @@ public class EinsatzData {
         String alarmString = String.format(("alarm-%tY%<tm%<td-%<tH%<tM%<tS"), myCal);
         String savePath = config.getString("saveWEBlocation");
 
-        if (savePath != null) {
+        if (savePath != null && einsatzData.length() > 0) {
             savePath += File.separator + yearString;
             File savePathFile = new File(savePath);
             if (!savePathFile.isAbsolute()) {
@@ -57,5 +59,8 @@ public class EinsatzData {
             System.out.println("========");
         }
 
+        if (einsatzData.length() == 0) {
+            lastEinsatzStore.clear();
+        }
     }
 }

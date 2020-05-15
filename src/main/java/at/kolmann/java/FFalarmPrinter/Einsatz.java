@@ -13,12 +13,14 @@ public class Einsatz {
     private final EinsatzPDF einsatzPDF;
     private final EinsatzHTML einsatzHTML;
     private final EinsatzPrint einsatzPrint;
+    private final LastEinsatzStore lastEinsatzStore;
 
-    public Einsatz(Config config) {
+    public Einsatz(Config config, LastEinsatzStore lastEinsatzStore) {
         this.config = config;
+        this.lastEinsatzStore = lastEinsatzStore;
         einsatzPDF = new EinsatzPDF(config);
         einsatzHTML = new EinsatzHTML(config);
-        einsatzPrint = new EinsatzPrint(config);
+        einsatzPrint = new EinsatzPrint(config, lastEinsatzStore);
     }
 
     public void process(JSONObject einsatz, String alarmPath) {
@@ -61,9 +63,14 @@ public class Einsatz {
             );
 
             try {
-                einsatzPrint.process(alarmPath+".pdf");
+                einsatzPrint.process(einsatzID,alarmPath+".pdf");
             } catch (IOException | PrintException e) {
                 e.printStackTrace();
+            }
+
+            if (!lastEinsatzStore.contains(einsatzID)) {
+                System.out.println("Adding to lastEinsatzStore: " + einsatzID);
+                lastEinsatzStore.add(einsatzID);
             }
 
             einsatzRouter.shutdown();

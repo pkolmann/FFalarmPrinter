@@ -88,10 +88,18 @@ public class PersistentCookieStore implements CookieStore, Runnable {
     public void run() {
         String SEPARATOR = "#";
 
-        // serialize cookies to persistent storage
-        System.out.println("");
-        System.out.println("");
+        File dirPath = new File(filePath);
+        File nameFile = new File(fileName);
+        File file = new File(dirPath + File.separator + nameFile);
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        // serialize cookies to persistent storage
         List<URI> cookieURIs = store.getURIs();
         for (URI uri : cookieURIs) {
             List<HttpCookie> cookies = store.get(uri);
@@ -124,11 +132,8 @@ public class PersistentCookieStore implements CookieStore, Runnable {
                     expired = Long.toString(cookie.getMaxAge());
                 }
 
-                File dirPath = new File(filePath);
-                File nameFile = new File(fileName);
-                File file = new File(dirPath + File.separator + nameFile);
                 try {
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(file,true));
                     writer.write(cookieURI);
                     writer.write(SEPARATOR);
                     writer.write(name);
