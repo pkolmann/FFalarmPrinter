@@ -47,7 +47,11 @@ public class FFalarmPrinter {
                 System.out.println(florian10Data.toString(2));
                 System.out.println("");
             } else if (florian10Data.has("CurrentState")) {
-                if (florian10Data.get("CurrentState").equals("token") && florian10Data.has("Token")) {
+                if (
+                        (florian10Data.get("CurrentState").equals("token") ||
+                                florian10Data.get("CurrentState").equals("waiting")
+                        ) && florian10Data.has("Token")
+                ) {
                     System.out.println("Token muss erst freigeschalten werden:");
                     System.out.println("");
                     System.out.println(florian10Data.get("Token"));
