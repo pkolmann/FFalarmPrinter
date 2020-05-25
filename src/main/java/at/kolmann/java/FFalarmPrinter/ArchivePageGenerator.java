@@ -1,9 +1,5 @@
 package at.kolmann.java.FFalarmPrinter;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class ArchivePageGenerator {
@@ -69,7 +65,7 @@ public class ArchivePageGenerator {
             for (File file1 : files1) {
                 if (file1.isDirectory()) {
                     String dirName = file1.getName();
-                    File[] files = file1.listFiles();
+                    File[] files = file1.listFiles((dir, name) -> name.toLowerCase().startsWith("alarm-"));
                     if (files == null) {
                         continue;
                     }
