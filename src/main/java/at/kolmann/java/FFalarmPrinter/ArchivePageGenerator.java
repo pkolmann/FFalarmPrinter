@@ -66,7 +66,7 @@ public class ArchivePageGenerator {
                 if (file1.isDirectory()) {
                     String dirName = file1.getName();
                     File[] files = file1.listFiles((dir, name) -> name.toLowerCase().startsWith("alarm-"));
-                    if (files == null) {
+                    if (files == null || files.length == 0) {
                         continue;
                     }
 
