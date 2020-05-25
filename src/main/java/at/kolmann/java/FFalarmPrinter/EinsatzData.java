@@ -22,6 +22,13 @@ public class EinsatzData {
         String alarmString = String.format(("alarm-%tY%<tm%<td-%<tH%<tM%<tS"), myCal);
         String savePath = config.getString("saveWEBlocation");
 
+        String einsatzDataHashCode = String.valueOf(einsatzData.toString().hashCode());
+        if (einsatzDataHashCode.equals(lastEinsatzStore.getLastEinsatzHash())) {
+            // No changes since last run. No need to regenerate data
+            return;
+        }
+        lastEinsatzStore.setLastEinsatzHash(einsatzDataHashCode);
+
         if (savePath != null && einsatzData.length() > 0) {
             savePath += File.separator + yearString;
             File savePathFile = new File(savePath);

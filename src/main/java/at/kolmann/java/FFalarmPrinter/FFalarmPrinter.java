@@ -30,7 +30,7 @@ public class FFalarmPrinter {
 
         String urlToFetch = null;
         if (config.get("wastlUrl") instanceof String) {
-            urlToFetch = (String) config.get("wastlUrl");
+            urlToFetch = config.getString("wastlUrl");
         }
         if (urlToFetch == null) {
             urlToFetch = "https://infoscreen.florian10.info/ows/infoscreen/einsatz.ashx";
@@ -66,7 +66,7 @@ public class FFalarmPrinter {
                     System.out.println("");
                 }
             } else {
-                System.out.println("No 'CurrentState' found in Respnse!");
+                System.out.println("No 'CurrentState' found in Response!");
                 System.out.println("");
                 System.out.println("Data from Florian 10:");
                 System.out.println(florian10Data.toString(2));

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 public class LastEinsatzStore implements Runnable {
     private final ArrayList<String> lastEinsatz = new ArrayList<>();
     private String lastEinsatzPath;
+    private String lastEinsatzHash;
 
     public LastEinsatzStore(Config config) {
 
@@ -31,9 +32,15 @@ public class LastEinsatzStore implements Runnable {
 
             InputStreamReader inputreader = new InputStreamReader(new FileInputStream(lastEinsatzFile));
             BufferedReader bufferedReader = new BufferedReader(inputreader);
+            boolean firstLine = true;
             while ((line = bufferedReader.readLine()) != null) {
-                if (!lastEinsatz.contains(line)) {
-                    lastEinsatz.add(line);
+                if (firstLine) {
+                    lastEinsatzHash = line;
+                    firstLine = false;
+                } else {
+                    if (!lastEinsatz.contains(line)) {
+                        lastEinsatz.add(line);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -59,6 +66,14 @@ public class LastEinsatzStore implements Runnable {
         return lastEinsatz;
     }
 
+    public void setLastEinsatzHash(String hash) {
+        lastEinsatzHash = hash;
+    }
+
+    public String getLastEinsatzHash() {
+        return lastEinsatzHash;
+    }
+
 
     @Override
     public void run() {
@@ -66,6 +81,8 @@ public class LastEinsatzStore implements Runnable {
 
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.write(lastEinsatzHash);
+            writer.newLine();
             writer.flush();
             writer.close();
         } catch (IOException e) {
@@ -73,7 +90,6 @@ public class LastEinsatzStore implements Runnable {
         }
 
         for (String einEinsatz : lastEinsatz) {
-            System.out.println("Writing to lastEinsatzFile: " + einEinsatz);
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
                 writer.write(einEinsatz);
