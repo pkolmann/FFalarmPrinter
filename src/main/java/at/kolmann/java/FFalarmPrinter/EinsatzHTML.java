@@ -2,6 +2,8 @@ package at.kolmann.java.FFalarmPrinter;
 
 import com.google.maps.ImageResult;
 import com.google.maps.model.DirectionsRoute;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedWriter;
@@ -11,6 +13,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.stream.Stream;
 
 public class EinsatzHTML {
@@ -149,6 +155,97 @@ public class EinsatzHTML {
             info.append("  <div class=\"rechts\">\n");
             info.append("    ").append(einsatz.getString("Bemerkung")
                     .replaceAll("\n", "<br />" + System.lineSeparator())).append("<br />\n");
+            info.append("  </div>\n");
+            info.append("</div>\n");
+        }
+
+        // Dispositionen
+        if (einsatz.get("Dispositionen") != null && einsatz.getJSONArray("Dispositionen").length() > 1) {
+            info.append("<div class=\"zeile\" id=\"einsatz-alarmierteFF\">\n");
+            info.append("  <div class=\"links\">\n");
+            info.append("    Alarmierte Feuerwehren:\n");
+            info.append("  </div>\n");
+            info.append("  <div class=\"rechts\">\n");
+
+            // Get all still active ones and sort by DispoTime
+            JSONArray dispos = einsatz.getJSONArray("Dispositionen");
+            JSONArray disponierteFF = new JSONArray();
+
+            ArrayList<JSONObject> jsonValues  = new ArrayList<JSONObject>();
+            for (int i=0; i<dispos.length(); i++) {
+                jsonValues .add(dispos.getJSONObject(i));
+            }
+            Collections.sort(jsonValues, new Comparator<JSONObject>() {
+                private static final String KEY_NAME = "DispoTime";
+
+                @Override
+                public int compare(JSONObject a, JSONObject b) {
+                    String valA = new String();
+                    String valB = new String();
+
+                    try {
+                        valA = a.getString(KEY_NAME);
+                        valB = b.getString(KEY_NAME);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    return valA.compareTo(valB);
+                }
+            });
+
+            for (int i = 0; i < dispos.length(); i++) {
+                disponierteFF.put(jsonValues.get(i));
+            }
+
+            StringBuilder dispoList = new StringBuilder();
+            Calendar myCal = Calendar.getInstance();
+            String today = String.format(("%tY-%<tm-%<tdT"), myCal);
+            dispoList.append("<ul>\n");
+
+            for (int i = 0; i < disponierteFF.length(); i++) {
+                JSONObject currentDispo = disponierteFF.getJSONObject(i);
+                if (currentDispo.has("EinTime")) {
+                    // Ignore already returned ones
+                    continue;
+                }
+                dispoList.append("<li>");
+
+                if (config.has("FeuerwehrName") &&
+                        currentDispo.getString("Name").equals(config.getString("FeuerwehrName"))) {
+                    dispoList.append("<b>");
+                }
+
+                dispoList.append(currentDispo.getString("Name"));
+                dispoList.append(" (Dispo: ");
+                dispoList.append(currentDispo.getString("DispoTime")
+                        .replace(today, "")
+                        .replace('T', ' ')
+                );
+                if (currentDispo.has("AlarmTime")) {
+                    dispoList.append(", Alarm: ");
+                    dispoList.append(currentDispo.getString("AlarmTime")
+                            .replace(today, "")
+                            .replace('T', ' ')
+                    );
+                }
+                if (currentDispo.has("AusTime")) {
+                    dispoList.append(", Aus: ");
+                    dispoList.append(currentDispo.getString("AusTime")
+                            .replace(today, "")
+                            .replace('T', ' ')
+                    );
+                }
+                dispoList.append(")");
+
+                if (config.has("FeuerwehrName") &&
+                        currentDispo.getString("Name").equals(config.getString("FeuerwehrName"))) {
+                    dispoList.append("</b>");
+                }
+                dispoList.append("</li>\n");
+            }
+            dispoList.append("</ul>\n");
+            info.append("    " + dispoList.toString());
             info.append("  </div>\n");
             info.append("</div>\n");
         }

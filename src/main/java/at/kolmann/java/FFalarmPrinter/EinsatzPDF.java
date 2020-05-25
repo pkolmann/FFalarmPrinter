@@ -18,16 +18,20 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.element.List;
 import com.itextpdf.layout.layout.LayoutArea;
 import com.itextpdf.layout.layout.LayoutContext;
 import com.itextpdf.layout.layout.LayoutResult;
 import com.itextpdf.layout.property.*;
 import com.itextpdf.layout.renderer.IRenderer;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -171,10 +175,6 @@ public class EinsatzPDF {
             cell.setBorder(Border.NO_BORDER);
             table.addCell(cell);
 
-
-
-
-
             // Melder
             if (einsatz.getString("Melder") != null) {
                 cell = new Cell();
@@ -217,6 +217,92 @@ public class EinsatzPDF {
                 cell = new Cell();
                 cell.add(new Paragraph(einsatz.getString("EinsatzErzeugt")
                         .replace('T', ' ')));
+                cell.setBorder(Border.NO_BORDER);
+                table.addCell(cell);
+            }
+            // Dispositionen
+            if (einsatz.get("Dispositionen") != null && einsatz.getJSONArray("Dispositionen").length() > 1) {
+                JSONArray dispos = einsatz.getJSONArray("Dispositionen");
+                cell = new Cell();
+                cell.add(new Paragraph("Alarmierte Feuerwehren:"));
+                cell.setFont(bold);
+                cell.setBorder(Border.NO_BORDER);
+                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+                table.addCell(cell);
+
+                // Get all still active ones and sort by DispoTime
+                JSONArray disponierteFF = new JSONArray();
+
+                ArrayList<JSONObject> jsonValues  = new ArrayList<JSONObject>();
+                for (int i=0; i<dispos.length(); i++) {
+                    jsonValues .add(dispos.getJSONObject(i));
+                }
+                Collections.sort(jsonValues, new Comparator<JSONObject>() {
+                    private static final String KEY_NAME = "DispoTime";
+
+                    @Override
+                    public int compare(JSONObject a, JSONObject b) {
+                        String valA = new String();
+                        String valB = new String();
+
+                        try {
+                            valA = a.getString(KEY_NAME);
+                            valB = b.getString(KEY_NAME);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        return valA.compareTo(valB);
+                    }
+                });
+
+                for (int i = 0; i < dispos.length(); i++) {
+                    disponierteFF.put(jsonValues.get(i));
+                }
+
+                cell = new Cell();
+                List dispoList = new List();
+                Calendar myCal = Calendar.getInstance();
+                String today = String.format(("%tY-%<tm-%<tdT"), myCal);
+
+                for (int i = 0; i < disponierteFF.length(); i++) {
+                    JSONObject currentDispo = disponierteFF.getJSONObject(i);
+                    if (currentDispo.has("EinTime")) {
+                        // Ignore already returned ones
+                        continue;
+                    }
+                    Paragraph dispoPara = new Paragraph();
+                    dispoPara.add(currentDispo.getString("Name"));
+                    dispoPara.add(" (Dispo: ");
+                    dispoPara.add(currentDispo.getString("DispoTime")
+                            .replace(today, "")
+                            .replace('T', ' ')
+                    );
+                    if (currentDispo.has("AlarmTime")) {
+                        dispoPara.add(", Alarm: ");
+                        dispoPara.add(currentDispo.getString("AlarmTime")
+                                .replace(today, "")
+                                .replace('T', ' ')
+                        );
+                    }
+                    if (currentDispo.has("AusTime")) {
+                        dispoPara.add(", Aus: ");
+                        dispoPara.add(currentDispo.getString("AusTime")
+                                .replace(today, "")
+                                .replace('T', ' ')
+                        );
+                    }
+                    dispoPara.add(")");
+
+                    ListItem item = new ListItem();
+                    if (config.has("FeuerwehrName") &&
+                            currentDispo.getString("Name").equals(config.getString("FeuerwehrName"))) {
+                        dispoPara.setBold();
+                    }
+                    item.add(dispoPara);
+                    dispoList.add(item);
+                }
+                cell.add(dispoList);
                 cell.setBorder(Border.NO_BORDER);
                 table.addCell(cell);
             }
@@ -309,8 +395,6 @@ public class EinsatzPDF {
 
                 for (DirectionsLeg routeLeg : route.legs) {
                     for (DirectionsStep step : routeLeg.steps) {
-                        System.out.println(step.htmlInstructions);
-
                         cell = new Cell();
                         Paragraph instructions = new Paragraph();
                         Pattern patter = Pattern.compile("(<[^>]+>)");

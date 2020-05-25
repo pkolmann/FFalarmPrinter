@@ -69,5 +69,8 @@ public class EinsatzData {
         if (einsatzData.length() == 0) {
             lastEinsatzStore.clear();
         }
+
+        // store lastEinsatzStore
+        lastEinsatzStore.run();
     }
 }
