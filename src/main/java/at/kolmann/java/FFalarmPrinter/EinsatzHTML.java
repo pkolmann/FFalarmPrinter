@@ -3,7 +3,6 @@ package at.kolmann.java.FFalarmPrinter;
 import com.google.maps.ImageResult;
 import com.google.maps.model.DirectionsRoute;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedWriter;
@@ -13,10 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.stream.Stream;
 
 public class EinsatzHTML {
@@ -28,6 +24,7 @@ public class EinsatzHTML {
             String fileName,
             String einsatzID,
             JSONObject einsatz,
+            JSONArray disponierteFF,
             String einsatzAdresse,
             DirectionsRoute route,
             ImageResult einsatzMap)
@@ -160,43 +157,12 @@ public class EinsatzHTML {
         }
 
         // Dispositionen
-        if (einsatz.get("Dispositionen") != null && einsatz.getJSONArray("Dispositionen").length() > 1) {
+        if (disponierteFF != null) {
             info.append("<div class=\"zeile\" id=\"einsatz-alarmierteFF\">\n");
             info.append("  <div class=\"links\">\n");
             info.append("    Alarmierte Feuerwehren:\n");
             info.append("  </div>\n");
             info.append("  <div class=\"rechts\">\n");
-
-            // Get all still active ones and sort by DispoTime
-            JSONArray dispos = einsatz.getJSONArray("Dispositionen");
-            JSONArray disponierteFF = new JSONArray();
-
-            ArrayList<JSONObject> jsonValues  = new ArrayList<>();
-            for (int i=0; i<dispos.length(); i++) {
-                jsonValues .add(dispos.getJSONObject(i));
-            }
-            jsonValues.sort(new Comparator<>() {
-                private static final String KEY_NAME = "DispoTime";
-
-                @Override
-                public int compare(JSONObject a, JSONObject b) {
-                    String valA = "";
-                    String valB = "";
-
-                    try {
-                        valA = a.getString(KEY_NAME);
-                        valB = b.getString(KEY_NAME);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-                    return valA.compareTo(valB);
-                }
-            });
-
-            for (int i = 0; i < dispos.length(); i++) {
-                disponierteFF.put(jsonValues.get(i));
-            }
 
             StringBuilder dispoList = new StringBuilder();
             Calendar myCal = Calendar.getInstance();

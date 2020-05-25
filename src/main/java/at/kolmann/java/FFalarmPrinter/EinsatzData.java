@@ -9,11 +9,13 @@ public class EinsatzData {
     final Config config;
     final Einsatz einsatz;
     private final LastEinsatzStore lastEinsatzStore;
+    private final ArchivePageGenerator archivePageGenerator;
 
     public EinsatzData(Config config) {
         this.config = config;
         this.lastEinsatzStore = new LastEinsatzStore(config);
         this.einsatz = new Einsatz(config, lastEinsatzStore);
+        this.archivePageGenerator = new ArchivePageGenerator(config);
     }
 
     public void process(JSONArray einsatzData) {
@@ -65,6 +67,9 @@ public class EinsatzData {
             einsatz.process(einsatzData.getJSONObject(i), alarmPath);
             System.out.println("========");
         }
+
+        // generate new archiv.html page
+        archivePageGenerator.generate();
 
         if (einsatzData.length() == 0) {
             lastEinsatzStore.clear();

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <title>FF Pitten Einsatzplan</title>
@@ -11,9 +11,9 @@
         let map;
 
         function initialize() {
-            var directionsDisplay = new google.maps.DirectionsRenderer();
-            var startLatLong = new google.maps.LatLng(@@STARTLAT@@, @@STARTLONG@@);
-            var myOptions = {
+            directionsDisplay = new google.maps.DirectionsRenderer();
+            const startLatLong = new google.maps.LatLng(@@STARTLAT@@, @@STARTLONG@@);
+            const myOptions = {
                 zoom:7,
                 mapTypeId: google.maps.MapTypeId.ROADMAP,
                 center: startLatLong
@@ -37,7 +37,7 @@
                 region: "at"
             };
             directionsService.route(request, function(response, status) {
-                if (status == google.maps.DirectionsStatus.OK) {
+                if (status === google.maps.DirectionsStatus.OK) {
                     const anfahrt = document.getElementById("einsatz-anfahrt-data");
                     anfahrt.innerHTML  = response.routes[0].legs[0].distance.text;
                     anfahrt.innerHTML += " - ungef&auml;hr ";

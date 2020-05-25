@@ -2,11 +2,15 @@ package at.kolmann.java.FFalarmPrinter;
 
 import com.google.maps.ImageResult;
 import com.google.maps.model.*;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.print.PrintException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 
 public class Einsatz {
     private final Config config;
@@ -44,10 +48,47 @@ public class Einsatz {
                 }
             }
 
+            // Calculate Disponitionen
+            JSONArray disponierteFF = null;
+            if (einsatz.get("Dispositionen") != null && einsatz.getJSONArray("Dispositionen").length() > 1) {
+                JSONArray dispos = einsatz.getJSONArray("Dispositionen");
+
+                // Get all still active ones and sort by DispoTime
+                disponierteFF = new JSONArray();
+
+                ArrayList<JSONObject> jsonValues = new ArrayList<>();
+                for (int i = 0; i < dispos.length(); i++) {
+                    jsonValues.add(dispos.getJSONObject(i));
+                }
+                jsonValues.sort(new Comparator<>() {
+                    private static final String KEY_NAME = "DispoTime";
+
+                    @Override
+                    public int compare(JSONObject a, JSONObject b) {
+                        String valA = "";
+                        String valB = "";
+
+                        try {
+                            valA = a.getString(KEY_NAME);
+                            valB = b.getString(KEY_NAME);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        return valA.compareTo(valB);
+                    }
+                });
+
+                for (int i = 0; i < dispos.length(); i++) {
+                    disponierteFF.put(jsonValues.get(i));
+                }
+            }
+
             einsatzPDF.saveEinsatz(
                     alarmPath+".pdf",
                     einsatzID,
                     einsatz,
+                    disponierteFF,
                     getEinsatzAdresse(einsatz),
                     route,
                     einsatzMap
@@ -57,6 +98,7 @@ public class Einsatz {
                     alarmPath + ".html",
                     einsatzID,
                     einsatz,
+                    disponierteFF,
                     getEinsatzAdresse(einsatz),
                     route,
                     einsatzMap

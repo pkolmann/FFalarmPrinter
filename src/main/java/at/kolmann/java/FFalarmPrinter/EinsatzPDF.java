@@ -10,7 +10,6 @@ import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfName;
 import com.itextpdf.kernel.pdf.PdfString;
@@ -19,13 +18,8 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.element.List;
-import com.itextpdf.layout.layout.LayoutArea;
-import com.itextpdf.layout.layout.LayoutContext;
-import com.itextpdf.layout.layout.LayoutResult;
 import com.itextpdf.layout.property.*;
-import com.itextpdf.layout.renderer.IRenderer;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -38,7 +32,6 @@ import java.util.regex.Pattern;
 public class EinsatzPDF {
     private final Config config;
     protected PdfFont bold;
-    private Matcher matcher;
 
     public EinsatzPDF(Config config) { this.config = config; }
 
@@ -46,6 +39,7 @@ public class EinsatzPDF {
             String fileName,
             String einsatzID,
             JSONObject einsatz,
+            JSONArray disponierteFF,
             String einsatzAdresse,
             DirectionsRoute route,
             ImageResult einsatzMap)
@@ -221,44 +215,13 @@ public class EinsatzPDF {
                 table.addCell(cell);
             }
             // Dispositionen
-            if (einsatz.get("Dispositionen") != null && einsatz.getJSONArray("Dispositionen").length() > 1) {
-                JSONArray dispos = einsatz.getJSONArray("Dispositionen");
+            if (disponierteFF != null) {
                 cell = new Cell();
                 cell.add(new Paragraph("Alarmierte Feuerwehren:"));
                 cell.setFont(bold);
                 cell.setBorder(Border.NO_BORDER);
                 cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 table.addCell(cell);
-
-                // Get all still active ones and sort by DispoTime
-                JSONArray disponierteFF = new JSONArray();
-
-                ArrayList<JSONObject> jsonValues  = new ArrayList<>();
-                for (int i=0; i<dispos.length(); i++) {
-                    jsonValues .add(dispos.getJSONObject(i));
-                }
-                jsonValues.sort(new Comparator<>() {
-                    private static final String KEY_NAME = "DispoTime";
-
-                    @Override
-                    public int compare(JSONObject a, JSONObject b) {
-                        String valA = "";
-                        String valB = "";
-
-                        try {
-                            valA = a.getString(KEY_NAME);
-                            valB = b.getString(KEY_NAME);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                        return valA.compareTo(valB);
-                    }
-                });
-
-                for (int i = 0; i < dispos.length(); i++) {
-                    disponierteFF.put(jsonValues.get(i));
-                }
 
                 cell = new Cell();
                 List dispoList = new List();
@@ -370,11 +333,6 @@ public class EinsatzPDF {
 
             Paragraph p = new Paragraph(" ");
             document.add(p);
-            IRenderer pRenderer = p.createRendererSubTree().setParent(document.getRenderer());
-            LayoutResult pLayoutResult = pRenderer.layout(new LayoutContext(new LayoutArea(0, new Rectangle(595-72, 842-72))));
-
-            float y = pLayoutResult.getOccupiedArea().getBBox().getY();
-            float x = pLayoutResult.getOccupiedArea().getBBox().getX();
 
             if (route != null) {
                 // Add Map image
