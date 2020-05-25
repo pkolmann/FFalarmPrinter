@@ -43,9 +43,9 @@ public class FFalarmPrinter {
         } else {
             if (florian10Data.has("error")) {
                 System.out.println("Failed to fetch data:");
-                System.out.println("");
+                System.out.println();
                 System.out.println(florian10Data.toString(2));
-                System.out.println("");
+                System.out.println();
             } else if (florian10Data.has("CurrentState")) {
                 if (
                         (florian10Data.get("CurrentState").equals("token") ||
@@ -53,24 +53,24 @@ public class FFalarmPrinter {
                         ) && florian10Data.has("Token")
                 ) {
                     System.out.println("Token muss erst freigeschalten werden:");
-                    System.out.println("");
+                    System.out.println();
                     System.out.println(florian10Data.get("Token"));
-                    System.out.println("");
+                    System.out.println();
                 } else if (florian10Data.getString("CurrentState").equals("data") && florian10Data.has("EinsatzData")) {
                     einsatzData.process(florian10Data.getJSONArray("EinsatzData"));
                 } else {
                     System.out.println("Unknown CurrentState!");
-                    System.out.println("");
-                    System.out.println("");
+                    System.out.println();
+                    System.out.println();
                     System.out.println(florian10Data.toString(2));
-                    System.out.println("");
+                    System.out.println();
                 }
             } else {
                 System.out.println("No 'CurrentState' found in Response!");
-                System.out.println("");
+                System.out.println();
                 System.out.println("Data from Florian 10:");
                 System.out.println(florian10Data.toString(2));
-                System.out.println("");
+                System.out.println();
             }
 
         }

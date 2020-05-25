@@ -233,17 +233,17 @@ public class EinsatzPDF {
                 // Get all still active ones and sort by DispoTime
                 JSONArray disponierteFF = new JSONArray();
 
-                ArrayList<JSONObject> jsonValues  = new ArrayList<JSONObject>();
+                ArrayList<JSONObject> jsonValues  = new ArrayList<>();
                 for (int i=0; i<dispos.length(); i++) {
                     jsonValues .add(dispos.getJSONObject(i));
                 }
-                Collections.sort(jsonValues, new Comparator<JSONObject>() {
+                jsonValues.sort(new Comparator<>() {
                     private static final String KEY_NAME = "DispoTime";
 
                     @Override
                     public int compare(JSONObject a, JSONObject b) {
-                        String valA = new String();
-                        String valB = new String();
+                        String valA = "";
+                        String valB = "";
 
                         try {
                             valA = a.getString(KEY_NAME);

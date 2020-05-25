@@ -171,17 +171,17 @@ public class EinsatzHTML {
             JSONArray dispos = einsatz.getJSONArray("Dispositionen");
             JSONArray disponierteFF = new JSONArray();
 
-            ArrayList<JSONObject> jsonValues  = new ArrayList<JSONObject>();
+            ArrayList<JSONObject> jsonValues  = new ArrayList<>();
             for (int i=0; i<dispos.length(); i++) {
                 jsonValues .add(dispos.getJSONObject(i));
             }
-            Collections.sort(jsonValues, new Comparator<JSONObject>() {
+            jsonValues.sort(new Comparator<>() {
                 private static final String KEY_NAME = "DispoTime";
 
                 @Override
                 public int compare(JSONObject a, JSONObject b) {
-                    String valA = new String();
-                    String valB = new String();
+                    String valA = "";
+                    String valB = "";
 
                     try {
                         valA = a.getString(KEY_NAME);
@@ -245,7 +245,7 @@ public class EinsatzHTML {
                 dispoList.append("</li>\n");
             }
             dispoList.append("</ul>\n");
-            info.append("    " + dispoList.toString());
+            info.append("    ").append(dispoList.toString());
             info.append("  </div>\n");
             info.append("</div>\n");
         }
