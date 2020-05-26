@@ -15,7 +15,7 @@ This is my first Java project, so things are not perfect. Please don't be too ha
 
 This project uses maven. So you should be able to compile it via
 
-`mvn  package assembly:single`
+`mvn package assembly:single`
 
 ## Running
 

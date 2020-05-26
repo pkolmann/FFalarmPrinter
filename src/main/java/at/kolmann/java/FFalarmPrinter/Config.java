@@ -81,6 +81,15 @@ public class Config {
         throw new IOException("Key " + key + " is not a double!");
     }
 
+    public Boolean getBoolean(String key) {
+        Object value = get(key);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+
+        return null;
+    }
+
     public Boolean has(String key) {
         return config.has(key);
     }

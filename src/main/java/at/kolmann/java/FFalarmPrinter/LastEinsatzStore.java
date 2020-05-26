@@ -4,11 +4,13 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class LastEinsatzStore implements Runnable {
+    private final Config config;
     private final ArrayList<String> lastEinsatz = new ArrayList<>();
     private String lastEinsatzPath;
     private String lastEinsatzHash;
 
     public LastEinsatzStore(Config config) {
+        this.config = config;
 
         lastEinsatzPath = config.getString("lastEinsatzFile");
         if (lastEinsatzPath == null) {
@@ -71,6 +73,10 @@ public class LastEinsatzStore implements Runnable {
     }
 
     public String getLastEinsatzHash() {
+        // check if debug is set in config
+        if (config.has("DEBUG") && config.getBoolean("DEBUG")) {
+            return "";
+        }
         return lastEinsatzHash;
     }
 
