@@ -1,7 +1,6 @@
 package at.kolmann.java.FFalarmPrinter;
 
-import com.google.maps.ImageResult;
-import com.google.maps.model.DirectionsRoute;
+import de.westnordost.osmapi.map.data.Node;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -12,6 +11,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.stream.Stream;
 
@@ -26,8 +26,7 @@ public class EinsatzHTML {
             JSONObject einsatz,
             JSONArray disponierteFF,
             String einsatzAdresse,
-            DirectionsRoute route,
-            ImageResult einsatzMap)
+            ArrayList<Node> hydrants)
     {
         String templatePath = config.getString("htmlTemplateFile");
 
@@ -56,10 +55,6 @@ public class EinsatzHTML {
         }
 
         String template = templateSB.toString();
-
-        if (route.legs.length == 0 || route.legs[0].steps.length == 0) {
-            return;
-        }
 
         String APIkey = config.getString("googleMapsApiKeyWeb");
         if (APIkey == null) {
@@ -225,13 +220,58 @@ public class EinsatzHTML {
         info.append("  </div>\n");
         info.append("</div>\n");
 
+        String feuerwehrhausLocationLat = null;
+        String feuerwehrhausLocationLon = null;
+        try {
+            feuerwehrhausLocationLat = String.valueOf(config.getDouble("FeuerwehrhausLocationLat"));
+            feuerwehrhausLocationLon = String.valueOf(config.getDouble("FeuerwehrhausLocationLon"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (feuerwehrhausLocationLat == null) {
+            System.out.println("EinsatzHTML: FeuerwehrhausLocationLat not found in config!");
+            feuerwehrhausLocationLat = "48.0";
+        }
+        if (feuerwehrhausLocationLon == null) {
+            System.out.println("EinsatzHTML: FeuerwehrhausLocationLon not found in config!");
+            feuerwehrhausLocationLon = "16.0";
+        }
 
         template = template.replaceAll("@@APIKEY@@", APIkey);
-        template = template.replaceAll("@@STARTLAT@@", route.legs[0].startLocation.lat+"");
-        template = template.replaceAll("@@STARTLONG@@", route.legs[0].startLocation.lng+"");
+        template = template.replaceAll("@@STARTLAT@@", feuerwehrhausLocationLat);
+        template = template.replaceAll("@@STARTLONG@@", feuerwehrhausLocationLon);
         template = template.replaceAll("@@ALARMADRESSE@@", einsatzAdresse
                 .replaceAll(System.lineSeparator(), ", "));
         template = template.replaceAll("@@INPUTLISTE@@", info.toString());
+
+        // add hydrants as markers...
+        StringBuilder hydrantMarkers = new StringBuilder();
+        int markerId = 0;
+        for (Node hydrant : hydrants) {
+            if (hydrant.isDeleted()) {
+                continue;
+            }
+            hydrantMarkers.append("            const marker");
+            hydrantMarkers.append(markerId);
+            markerId++;
+            hydrantMarkers.append("= new google.maps.Marker({\n");
+            hydrantMarkers.append("                    position: {lat: ");
+            hydrantMarkers.append(hydrant.getPosition().getLatitude());
+            hydrantMarkers.append(", lng: ");
+            hydrantMarkers.append(hydrant.getPosition().getLongitude());
+            hydrantMarkers.append("},\n");
+            hydrantMarkers.append("            map: map,\n");
+            hydrantMarkers.append("                    icon: {\n");
+            hydrantMarkers.append("                url: \"http://maps.google.com/mapfiles/ms/icons/blue-dot.png\"\n");
+            hydrantMarkers.append("            }\n");
+            hydrantMarkers.append("            });\n\n");
+//                    Map<String, String> tags = hydrant.getTags();
+//                    tags.forEach((k,v)->System.out.println("Key: " + k + " - Value: " + v));
+//
+//                    System.out.println("--------");
+//                    System.out.println();
+        }
+        template = template.replaceAll("@@MARKERS@@", hydrantMarkers.toString());
 
         System.out.println("Saving HTML to " + fileName);
         File file = new File(fileName);

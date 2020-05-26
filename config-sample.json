@@ -31,6 +31,9 @@
   "_comment_FeuerwehrName": "Specify Name to highlight on Alarm-List",
   "FeuerwehrName": "XX",
   
+  "_comment_HydrantSearchRadius": "Specify the search radius to search for hydrants in OpenStreetMap (in meters)",
+  "hydrantSearchRadius": 400,
+  
   "_comment_FeuerwehrLogo": "Path to a logo to be added to alarm file",
   "FeuerwehrLogo": "FF-logo.jpg",
   

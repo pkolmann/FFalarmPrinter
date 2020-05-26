@@ -1,5 +1,6 @@
 package at.kolmann.java.FFalarmPrinter;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.slf4j.Logger;
@@ -58,6 +59,19 @@ public class FFalarmPrinter {
                     System.out.println();
                 } else if (florian10Data.getString("CurrentState").equals("data") && florian10Data.has("EinsatzData")) {
                     einsatzData.process(florian10Data.getJSONArray("EinsatzData"));
+                } else if (florian10Data.getString("CurrentState").equals("error")) {
+                    System.out.println("Fehler von Florian Krems gemeldet:");
+                    JSONArray einsatzErrors = florian10Data.getJSONArray("Errors");
+                    for (int i = 0; i < einsatzErrors.length(); i++) {
+                        JSONObject einsatzError = einsatzErrors.getJSONObject(i);
+                        System.out.print("  * " + einsatzError.getString("ErrorMsg"));
+                        System.out.print(" (Error Code: " + einsatzError.getInt("ErrorCode"));
+                        if (einsatzError.getBoolean("IsCritical")) {
+                            System.out.print(", KRITISCHER FEHLER!");
+                        }
+                        System.out.println(")");
+                    }
+                    System.out.println();
                 } else {
                     System.out.println("Unknown CurrentState!");
                     System.out.println();

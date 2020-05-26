@@ -2,6 +2,7 @@ package at.kolmann.java.FFalarmPrinter;
 
 import com.google.maps.ImageResult;
 import com.google.maps.model.*;
+import de.westnordost.osmapi.map.data.Node;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,7 +39,25 @@ public class Einsatz {
             //DirectionsRoute route = null;
             DirectionsRoute route = einsatzRouter.getRoute(einsatzAdresse);
 
-            ImageResult einsatzMap = einsatzRouter.getMapsImage();
+            LatLng einsatzLatLng = einsatzRouter.getEinsatzLatLng();
+            GeoLocation einsatzLocation = GeoLocation.fromDegrees(einsatzLatLng.lat, einsatzLatLng.lng);
+            double hydrantSearchRadius = 100.0;
+            try {
+                hydrantSearchRadius = config.getDouble("hydrantSearchRadius");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            double earthRadius = 6371008.8; // in meters
+            GeoLocation[] einsatzBox = einsatzLocation.boundingCoordinates(hydrantSearchRadius, earthRadius);
+            for (GeoLocation loc : einsatzBox) {
+                System.out.println("einsatzBox: " + loc.toString());
+            }
+
+            OsmHydrant osmHydrant = new OsmHydrant();
+            ArrayList<Node> hydrants = osmHydrant.getHydrants(einsatzBox);
+
+            ImageResult einsatzMap = einsatzRouter.getMapsImage(hydrants);
             if (einsatzMap != null) {
                 try (FileOutputStream fos = new FileOutputStream(alarmPath+".png")) {
                     System.out.println("Saving Map to " + alarmPath + ".png");
@@ -84,6 +103,8 @@ public class Einsatz {
                 }
             }
 
+            System.out.println("EinsatzAdresse: " + getEinsatzAdresse(einsatz));
+
             einsatzPDF.saveEinsatz(
                     alarmPath+".pdf",
                     einsatzID,
@@ -100,8 +121,7 @@ public class Einsatz {
                     einsatz,
                     disponierteFF,
                     getEinsatzAdresse(einsatz),
-                    route,
-                    einsatzMap
+                    hydrants
             );
 
             try {
@@ -135,7 +155,7 @@ public class Einsatz {
                 einsatzAdresse.append(einsatz.getString("Strasse"));
                 if (einsatz.has("Nummer1")) {
                     einsatzAdresse.append(" ");
-                    einsatzAdresse.append(einsatz.getString("Nummer1"));
+                    einsatzAdresse.append(einsatz.getString("Nummer1").replace(".000", ""));
                 }
             }
             if (einsatz.has("Plz")) {

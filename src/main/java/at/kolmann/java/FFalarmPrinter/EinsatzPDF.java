@@ -146,26 +146,6 @@ public class EinsatzPDF {
 
             cell = new Cell();
             cell.add(new Paragraph(einsatzAdresse));
-
-            if (einsatz.has("Strasse") && einsatz.getString("Strasse").contains("A2")) {
-                StringBuilder autobahn = new StringBuilder();
-                if (einsatz.has("Abschnitt")) {
-                    autobahn.append(einsatz.getString("Abschnitt")).append(System.lineSeparator());
-                }
-                if (einsatz.has("Nummer1")) {
-                    long nr = einsatz.getLong("Nummer1");
-                    if (nr > 1000) {
-                        nr /= 100;
-                    } else if (nr > 100) {
-                        nr /= 10;
-                    }
-                    autobahn.append("Baukilometer: ").append(nr).append(System.lineSeparator());
-                }
-                autobahn.append(einsatz.getString("Ort")).append(System.lineSeparator());
-                cell.add(new Paragraph(autobahn.toString()));
-            } else {
-                cell.add(new Paragraph(einsatzAdresse));
-            }
             cell.setBorder(Border.NO_BORDER);
             table.addCell(cell);
 

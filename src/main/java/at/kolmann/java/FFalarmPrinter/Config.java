@@ -78,6 +78,10 @@ public class Config {
             return (double) value;
         }
 
+        if (value instanceof Integer) {
+            return Double.valueOf((Integer) value);
+        }
+
         throw new IOException("Key " + key + " is not a double!");
     }
 
