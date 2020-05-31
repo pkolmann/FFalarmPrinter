@@ -133,8 +133,14 @@ public class EinsatzHTML {
             info.append("    Melder:\n");
             info.append("  </div>\n");
             info.append("  <div class=\"rechts\">\n");
-            info.append("    ").append(einsatz.getString("Melder")
-                    .replaceAll("\n", "<br />" + System.lineSeparator())).append("<br />\n");
+
+            StringBuilder melder = new StringBuilder();
+            melder.append(einsatz.getString("Melder")
+                    .replaceAll("\n", "<br />" + System.lineSeparator()));
+            if (einsatz.has("MelderTelefon")) {
+                melder.append(" (").append(einsatz.getString("MelderTelefon")).append(")");
+            }
+            info.append("    ").append(melder.toString()).append("<br />\n");
             info.append("  </div>\n");
             info.append("</div>\n");
         }

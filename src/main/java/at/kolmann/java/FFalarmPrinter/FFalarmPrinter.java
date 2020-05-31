@@ -58,7 +58,7 @@ public class FFalarmPrinter {
                     System.out.println(florian10Data.get("Token"));
                     System.out.println();
                 } else if (florian10Data.getString("CurrentState").equals("data") && florian10Data.has("EinsatzData")) {
-                    einsatzData.process(florian10Data.getJSONArray("EinsatzData"));
+                    einsatzData.process(florian10Data);
                 } else if (florian10Data.getString("CurrentState").equals("error")) {
                     System.out.println("Fehler von Florian Krems gemeldet:");
                     JSONArray einsatzErrors = florian10Data.getJSONArray("Errors");

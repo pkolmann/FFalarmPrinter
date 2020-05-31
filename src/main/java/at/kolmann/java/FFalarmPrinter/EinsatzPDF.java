@@ -159,7 +159,11 @@ public class EinsatzPDF {
                 table.addCell(cell);
 
                 cell = new Cell();
-                cell.add(new Paragraph(einsatz.getString("Melder")));
+                Paragraph melder = new Paragraph(einsatz.getString("Melder"));
+                if (einsatz.has("MelderTelefon")) {
+                    melder.add(" (" + einsatz.getString("MelderTelefon") + ")");
+                }
+                cell.add(melder);
                 cell.setBorder(Border.NO_BORDER);
                 table.addCell(cell);
             }
@@ -339,7 +343,6 @@ public class EinsatzPDF {
                         Matcher matcher = patter.matcher(step.htmlInstructions);
 
                         int pos = 0;
-                        String text = "";
                         boolean isBold = false;
                         boolean lastCharIsSpace = false;
                         int boldStart = 0;

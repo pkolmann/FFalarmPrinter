@@ -1,6 +1,7 @@
 package at.kolmann.java.FFalarmPrinter;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.util.Calendar;
@@ -18,18 +19,20 @@ public class EinsatzData {
         this.archivePageGenerator = new ArchivePageGenerator(config);
     }
 
-    public void process(JSONArray einsatzData) {
+    public void process(JSONObject einsatzJSON) {
         Calendar myCal = Calendar.getInstance();
         String yearString = String.format(("%tY"), myCal);
         String alarmString = String.format(("alarm-%tY%<tm%<td-%<tH%<tM%<tS"), myCal);
         String savePath = config.getString("saveWEBlocation");
 
-        String einsatzDataHashCode = String.valueOf(einsatzData.toString().hashCode());
-        if (einsatzDataHashCode.equals(lastEinsatzStore.getLastEinsatzHash())) {
+        JSONArray einsatzData = einsatzJSON.getJSONArray("EinsatzData");
+
+        String einsatzJSONHashCode = String.valueOf(einsatzJSON.toString().hashCode());
+        if (einsatzJSONHashCode.equals(lastEinsatzStore.getLastEinsatzHash())) {
             // No changes since last run. No need to regenerate data
             return;
         }
-        lastEinsatzStore.setLastEinsatzHash(einsatzDataHashCode);
+        lastEinsatzStore.setLastEinsatzHash(einsatzJSONHashCode);
 
         if (savePath != null && einsatzData.length() > 0) {
             savePath += File.separator + yearString;
@@ -50,7 +53,7 @@ public class EinsatzData {
 
                 try {
                     BufferedWriter writer = new BufferedWriter(new FileWriter(saveJSONfile));
-                    writer.write(einsatzData.toString(2));
+                    writer.write(einsatzJSON.toString(2));
                     writer.newLine();
                     writer.flush();
                     writer.close();

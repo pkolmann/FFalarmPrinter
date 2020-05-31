@@ -163,7 +163,4 @@ public class EinsatzRouter {
         return einsatzLatLng;
     }
 
-    public void setDestination(String destination) {
-        this.destination = destination;
-    }
 }
