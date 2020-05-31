@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.print.PrintException;
+import java.awt.print.PrinterException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,6 +32,11 @@ public class Einsatz {
     public void process(JSONObject einsatz, String alarmPath) {
         String einsatzID = einsatz.getString("EinsatzID");
         System.out.println(einsatzID);
+        try {
+            einsatzPrint.process(einsatzID, "C:\\Users\\philipp\\IdeaProjects\\FFalarmPrinter\\einsatzWEB\\2020\\alarm-20200531-112348-NK 1366.pdf");
+        } catch (IOException | PrinterException e) {
+            e.printStackTrace();
+        }
 
         String einsatzAdresse = getEinsatzAdresse(einsatz);
 
@@ -126,7 +132,7 @@ public class Einsatz {
 
             try {
                 einsatzPrint.process(einsatzID,alarmPath+".pdf");
-            } catch (IOException | PrintException e) {
+            } catch (IOException | PrinterException e) {
                 e.printStackTrace();
             }
 
