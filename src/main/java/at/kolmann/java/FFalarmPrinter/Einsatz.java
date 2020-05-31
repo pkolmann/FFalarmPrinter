@@ -128,7 +128,7 @@ public class Einsatz {
             try {
                 einsatzPrint.process(einsatzID,alarmPath+".pdf");
             } catch (IOException | PrinterException e) {
-                System.out.println("einsatzPrint Error: " + e.getCause());
+                System.out.println("einsatzPrint Error: " + e.getMessage());
             }
 
             if (!lastEinsatzStore.contains(einsatzID)) {

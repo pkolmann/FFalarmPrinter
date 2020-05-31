@@ -41,7 +41,7 @@ public class EinsatzPrint {
         PrintRequestAttributeSet patts = new HashPrintRequestAttributeSet();
         PrintService[] ps = PrintServiceLookup.lookupPrintServices(flavor, patts);
         if (ps.length == 0) {
-            throw new IllegalStateException("No suitable printer found");
+            throw new PrinterException("No suitable printer found");
         }
 
         if (myPrinterName == null) {
@@ -69,7 +69,7 @@ public class EinsatzPrint {
         }
 
         if (myPrinter == null) {
-            throw new IllegalStateException("Printer not found");
+            throw new PrinterException("Printer not found");
         }
 
         System.out.println("Printing PDF " + filePath + " to " + myPrinter.getName());
