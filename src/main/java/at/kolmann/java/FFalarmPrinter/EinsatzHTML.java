@@ -31,6 +31,11 @@ public class EinsatzHTML {
         String templatePath = config.getString("htmlTemplateFile");
 
         if (templatePath == null) {
+            System.out.println("No htmlTemplateFile set in config.json. (Set to 'none' to hide this message)");
+            return;
+        }
+
+        if (templatePath.toLowerCase().equals("none")) {
             return;
         }
 
@@ -41,6 +46,7 @@ public class EinsatzHTML {
         }
 
         if (!templateFile.exists()) {
+            System.out.println("TemplateFile " + templatePath + " does not exist!");
             return;
         }
 
@@ -137,7 +143,7 @@ public class EinsatzHTML {
             StringBuilder melder = new StringBuilder();
             melder.append(einsatz.getString("Melder")
                     .replaceAll("\n", "<br />" + System.lineSeparator()));
-            if (einsatz.has("MelderTelefon")) {
+            if (einsatz.has("MelderTelefon") && !einsatz.getString("MelderTelefon").equals("")) {
                 melder.append(" (").append(einsatz.getString("MelderTelefon")).append(")");
             }
             info.append("    ").append(melder.toString()).append("<br />\n");

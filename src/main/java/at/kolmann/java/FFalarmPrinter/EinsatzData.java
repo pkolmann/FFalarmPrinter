@@ -34,6 +34,9 @@ public class EinsatzData {
         }
         lastEinsatzStore.setLastEinsatzHash(einsatzJSONHashCode);
 
+        // Print current date for logile
+        System.out.println(String.format(("%tY-%<tm-%<td %<tH:%<tM:%<tS"), myCal));
+
         if (savePath != null && einsatzData.length() > 0) {
             savePath += File.separator + yearString;
             File savePathFile = new File(savePath);
