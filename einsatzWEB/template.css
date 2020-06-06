@@ -109,3 +109,20 @@ ul li {
     }
 
 }
+
+@media only screen and (max-width: 1024px) {
+  /* For mobile phones: */
+    #page {
+        -moz-background-clip:border;
+        -moz-background-origin:padding;
+        background:#FFFFFF none repeat scroll 0 0;
+        border-color:#999999;
+        border-style:solid;
+        border-width:1px 1px 2px 2px;
+        margin: 5px auto 5px;
+        overflow:hidden;
+        width:100%;
+        font-size: 300%;
+    }
+
+}

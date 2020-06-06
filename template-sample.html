@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>FF Pitten Einsatzplan</title>
+    <link href="../template.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="https://maps.google.at/maps/api/js?key=@@APIKEY@@"></script>
+    <script type="text/javascript">
+        let directionDisplay;
+        const directionsService = new google.maps.DirectionsService();
+        let map;
+
+        function initialize() {
+            directionsDisplay = new google.maps.DirectionsRenderer();
+            const startLatLong = new google.maps.LatLng(@@STARTLAT@@, @@STARTLONG@@);
+            const myOptions = {
+                zoom:7,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                center: startLatLong
+            }
+            map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+            directionsDisplay.setMap(map);
+            directionsDisplay.setPanel(document.getElementById("directionsPanel"));
+
+            const alarmadresse = "@@ALARMADRESSE@@";
+            const request = {
+                origin: startLatLong,
+                waypoints: [
+                    {
+                        location: "Alleegasse, 2823 Pitten",
+                        stopover: false
+                    }
+                ],
+                destination: alarmadresse,
+                travelMode: google.maps.DirectionsTravelMode.DRIVING,
+                unitSystem: google.maps.DirectionsUnitSystem.METRIC,
+                region: "at"
+            };
+            directionsService.route(request, function(response, status) {
+                if (status === google.maps.DirectionsStatus.OK) {
+                    const anfahrt = document.getElementById("einsatz-anfahrt-data");
+                    anfahrt.innerHTML  = response.routes[0].legs[0].distance.text;
+                    anfahrt.innerHTML += " - ungef&auml;hr ";
+                    anfahrt.innerHTML += response.routes[0].legs[0].duration.text;
+
+                    directionsDisplay.setDirections(response);
+
+                    if (parseFloat(response.routes[0].legs[0].distance.text) > 10.0) {
+                        center = response.routes[0].legs[response.routes[0].legs.length - 1].end_location;
+                        directionsDisplay.setOptions({preserveViewport: true});
+                        map.setCenter(center);
+                        map.setZoom(14);
+
+                        document.getElementById("directionsPanel").style.display = "block";
+                        document.getElementById("directionsPanel").style.pageBreakBefore = "always";
+                    }
+                }
+            });
+			
+			@@MARKERS@@
+        }
+    </script>
+</head>
+<body onload="initialize()">
+<div id="page" class="page" style="">
+    <div id="back-link">
+        <a href="../archiv.html">Zum Archiv</a> | <a href="../index.html">Zum Index</a>
+    </div>
+    <div id="header">
+        <h1>FF Pitten Einsatzplan</h1>
+    </div>
+    <div id="einsatzdaten" style="">
+        <div class="inputliste">
+            @@INPUTLISTE@@
+            <div class="zeile" id="einsatz-anfahrt">
+                <div class="links">
+                    Wegstrecke:
+                </div>
+                <div class="rechts" id="einsatz-anfahrt-data">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="map_canvas" style=""></div>
+    <div id="directionsPanel" style=""></div>
+</div>
+</body>
+</html>
