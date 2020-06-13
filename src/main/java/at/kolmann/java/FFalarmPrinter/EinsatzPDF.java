@@ -42,7 +42,7 @@ public class EinsatzPDF {
             JSONArray disponierteFF,
             String einsatzAdresse,
             DirectionsRoute route,
-            ImageResult einsatzMap)
+            byte[] einsatzMap)
     {
         try {
             bold = PdfFontFactory.createFont(StandardFonts.TIMES_BOLD);
@@ -320,7 +320,7 @@ public class EinsatzPDF {
 
             if (route != null) {
                 // Add Map image
-                ImageData imageData = ImageDataFactory.create(einsatzMap.imageData);
+                ImageData imageData = ImageDataFactory.create(einsatzMap);
                 Image mapImage = new Image(imageData);
                 mapImage.setAutoScale(true);
                 mapImage.setHorizontalAlignment(HorizontalAlignment.CENTER);

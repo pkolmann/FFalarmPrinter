@@ -1,6 +1,7 @@
 package at.kolmann.java.FFalarmPrinter;
 
-import com.google.maps.*;
+import com.google.maps.DirectionsApiRequest;
+import com.google.maps.GeoApiContext;
 import com.google.maps.errors.ApiException;
 import com.google.maps.model.*;
 import de.westnordost.osmapi.map.data.Node;
@@ -12,12 +13,14 @@ public class EinsatzRouter {
     private final Config config;
     private final GeoApiContext context;
     private final DirectionsApiRequest directionsRequest;
-    private ImageResult mapsImage;
+    private byte[] mapsImage;
     private DirectionsResult result;
     private DirectionsRoute route;
 
     private String destination;
     private LatLng einsatzLatLng;
+
+    private StaticMapGenerator staticMapGenerator;
 
     public EinsatzRouter(Config config) {
         this.config = config;
@@ -28,6 +31,8 @@ public class EinsatzRouter {
                 .build();
 
         directionsRequest = new DirectionsApiRequest(context);
+//        staticMapGenerator = new GoogleStaticMapGenerator(config, context);
+        staticMapGenerator = new OpenStaticMapGenerator(config, context);
     }
 
     public void shutdown() {
@@ -85,66 +90,12 @@ public class EinsatzRouter {
         }
     }
 
-    private void processMapImage(ArrayList<Node> hydrants) {
-        if (route != null) {
-            try {
-                StaticMapsRequest.Markers markerA = new StaticMapsRequest.Markers();
-                markerA.addLocation(new LatLng(
-                        config.getDouble("FeuerwehrhausLocationLat"),
-                        config.getDouble("FeuerwehrhausLocationLon")
-                ));
-                markerA.label("A");
 
-                StaticMapsRequest.Markers markerE = new StaticMapsRequest.Markers();
-                markerE.addLocation(destination);
-                markerE.label("E");
-
-                int mapZoom = 13;
-                if (route.legs[0].distance.inMeters < 5000) {
-                    mapZoom = 15;
-                } else if (route.legs[0].distance.inMeters < 20000) {
-                    mapZoom = 14;
-                }
-
-                // add hydrants as markers...
-                StaticMapsRequest.Markers hydrantMarkers = new StaticMapsRequest.Markers();
-                for (Node hydrant : hydrants) {
-                    if (hydrant.isDeleted()) {
-                        continue;
-                    }
-                    hydrantMarkers.addLocation(new LatLng(hydrant.getPosition().getLatitude(), hydrant.getPosition().getLongitude()));
-                    hydrantMarkers.label("H");
-                    hydrantMarkers.size(StaticMapsRequest.Markers.MarkersSize.tiny);
-                    hydrantMarkers.color("blue");
-                }
-
-                mapsImage = new StaticMapsRequest(context)
-                        .path(route.overviewPolyline)
-                        .center(destination)
-                        .zoom(mapZoom)
-                        .markers(markerA)
-                        .markers(markerE)
-                        .markers(hydrantMarkers)
-                        .format(StaticMapsRequest.ImageFormat.png)
-                        .maptype(StaticMapsRequest.StaticMapType.roadmap)
-                        .language("de")
-                        .size(new Size(1280, 960))
-                        .await();
-            } catch (Exception e) {
-                e.printStackTrace();
-                context.shutdown();
-            }
-        }
-    }
-
-    public ImageResult getMapsImage(ArrayList<Node> hydrants) {
+    public byte[] getMapsImage(ArrayList<Node> hydrants) {
         if (destination == null) {
             return null;
         }
-        if (mapsImage == null) {
-            processMapImage(hydrants);
-        }
-        return mapsImage;
+        return staticMapGenerator.getMapsImage(route, einsatzLatLng, hydrants);
     }
 
     public DirectionsRoute getRoute(String destination) {

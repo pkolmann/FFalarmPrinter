@@ -58,11 +58,11 @@ public class Einsatz {
             OsmHydrant osmHydrant = new OsmHydrant();
             ArrayList<Node> hydrants = osmHydrant.getHydrants(einsatzBox);
 
-            ImageResult einsatzMap = einsatzRouter.getMapsImage(hydrants);
+            byte[] einsatzMap = einsatzRouter.getMapsImage(hydrants);
             if (einsatzMap != null) {
                 try (FileOutputStream fos = new FileOutputStream(alarmPath+".png")) {
                     System.out.println("Saving Map to " + alarmPath + ".png");
-                    fos.write(einsatzMap.imageData);
+                    fos.write(einsatzMap);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
