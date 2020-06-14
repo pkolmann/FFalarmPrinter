@@ -49,6 +49,8 @@ public class GoogleStaticMapGenerator implements StaticMapGenerator {
 
                 int mapZoom = 13;
                 if (route.legs[0].distance.inMeters < 5000) {
+                    mapZoom = 16;
+                } else if (route.legs[0].distance.inMeters < 10000) {
                     mapZoom = 15;
                 } else if (route.legs[0].distance.inMeters < 20000) {
                     mapZoom = 14;

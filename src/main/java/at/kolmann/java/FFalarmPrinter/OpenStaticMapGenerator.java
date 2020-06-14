@@ -43,12 +43,12 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
             try {
                 int mapZoom = 13;
                 if (route.legs[0].distance.inMeters < 5000) {
+                    mapZoom = 16;
+                } else if (route.legs[0].distance.inMeters < 10000) {
                     mapZoom = 15;
                 } else if (route.legs[0].distance.inMeters < 20000) {
                     mapZoom = 14;
                 }
-
-                System.out.println("EinsatzLoc: " + einsatzLatLng.lat + ", " + einsatzLatLng.lng);
 
                 // OSM / Basemap tiles
                 int xtile = (int)Math.floor( (einsatzLatLng.lng + 180) / 360 * (1<<mapZoom) ) ;
@@ -79,7 +79,6 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                                 x +
                                 ".png";
                         URL imageUrl =  new URL(urlStr);
-                        System.out.println(imageUrl.toString());
                         tileServerId++;
                         if (tileServerId >= tileServer.length) tileServerId = 0;
 
@@ -141,7 +140,6 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                 // Einsatzort im Image
                 int einsatzX = coord2pixel(einsatzLatLng.lng - west, yPixel);
                 int einsatzY = coord2pixel(north - einsatzLatLng.lat,  xPixel);
-                System.out.println("Einsatz: " + einsatzX + " , " + einsatzY);
 
                 BufferedImage redDot = mapMarker(Color.RED);
                 einsatzX = einsatzX - (int)Math.floor((double)redDot.getWidth() / 2);
