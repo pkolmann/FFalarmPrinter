@@ -49,12 +49,11 @@ public class Einsatz {
                 e.printStackTrace();
             }
 
-            double earthRadius = 6371008.8; // in meters
+            // Mean Earth Radius, as recommended for use by
+            // the International Union of Geodesy and Geophysics,
+            // see http://rosettacode.org/wiki/Haversine_formula
+            double earthRadius = 6371000.0; // in meters
             GeoLocation[] einsatzBox = einsatzLocation.boundingCoordinates(hydrantSearchRadius, earthRadius);
-            for (GeoLocation loc : einsatzBox) {
-                System.out.println("einsatzBox: " + loc.toString());
-            }
-
             OsmHydrant osmHydrant = new OsmHydrant();
             ArrayList<Node> hydrants = osmHydrant.getHydrants(einsatzBox);
 

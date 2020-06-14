@@ -14,7 +14,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 public class OpenStaticMapGenerator implements StaticMapGenerator {
-    private  Config config;
+    private final Config config;
     private final GeoApiContext context;
     private final String[] tileServer = {
             "https://maps.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
@@ -23,6 +23,9 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
             "https://maps3.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
             "https://maps4.wien.gv.at/basemap/geolandbasemap/normal/google3857/"
     };
+
+    static final private int NUMBER_OF_TILES = 5;
+    static final private int TILE_PIXELS = 256;
 
     private byte[] mapsImage = null;
 
@@ -63,13 +66,15 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                 if (ytile >= (1<<mapZoom))
                     ytile=((1<<mapZoom)-1);
 
-                BufferedImage baseMapBuffer = new BufferedImage(256 * 5, 256 * 5, BufferedImage.TYPE_INT_RGB);
+                BufferedImage baseMapBuffer = new BufferedImage(TILE_PIXELS * NUMBER_OF_TILES,
+                        TILE_PIXELS * NUMBER_OF_TILES, BufferedImage.TYPE_INT_RGB);
                 Graphics2D baseMapGraphics = (Graphics2D) baseMapBuffer.getGraphics();
                 int xOffset = 0;
                 int yOffset = 0;
                 int tileServerId = 0;
-                for (int x = xtile - 2; x <= xtile + 2; x++) {
-                    for (int y = ytile - 2; y <= ytile + 2; y++) {
+                int tileDiff = (int)Math.floor((NUMBER_OF_TILES - 1) / 2.0 );
+                for (int x = xtile - tileDiff; x <= xtile + tileDiff; x++) {
+                    for (int y = ytile - tileDiff; y <= ytile + tileDiff; y++) {
 
                         String urlStr = tileServer[tileServerId] +
                                 mapZoom +
@@ -85,22 +90,22 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                         try {
                             Image image = ImageIO.read(imageUrl);
                             baseMapGraphics.drawImage(image, xOffset, yOffset, null);
-                            yOffset += 256;
+                            yOffset += TILE_PIXELS;
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
                     yOffset = 0;
-                    xOffset += 256;
+                    xOffset += TILE_PIXELS;
                 }
 
-                double north = tile2lat(ytile - 2, mapZoom);
-                double south = tile2lat(ytile + 3, mapZoom);
-                double west = tile2lon(xtile - 2, mapZoom);
-                double east = tile2lon(xtile + 3, mapZoom);
+                double north = tile2lat(ytile - tileDiff, mapZoom);
+                double south = tile2lat(ytile + tileDiff + 1, mapZoom);
+                double west = tile2lon(xtile - tileDiff, mapZoom);
+                double east = tile2lon(xtile + tileDiff + 1, mapZoom);
 
-                double xPixel = (north - south) / (256 * 5);
-                double yPixel = (east - west) / (256 * 5);
+                double xPixel = (north - south) / (TILE_PIXELS * NUMBER_OF_TILES);
+                double yPixel = (east - west) / (TILE_PIXELS * NUMBER_OF_TILES);
 
                 int lastX = -1;
                 int lastY = -1;
@@ -160,6 +165,27 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                     baseMapGraphics.drawImage(blueDot, hydrantX, hydrantY, null);
                 }
 
+                // Add scale to bottom
+                double middleLat = south + ((north - south) / 2);
+                // Max 100 px scale
+                double distanceWest = tile2lon(xtile, mapZoom);
+                double distanceEast = distanceWest + ((tile2lon(xtile + 1, mapZoom) - distanceWest) * 100.0 / TILE_PIXELS);
+                double distance = haversine(middleLat, distanceWest, middleLat, distanceEast);
+                long roundDistance = getRoundNum((long) distance);
+                int scalePixel = (int) Math.round(100.0 * (roundDistance / distance));
+
+                // scalePixel Pixel equals roundDistance Meters in reality
+                baseMapGraphics.setStroke(new BasicStroke(1));
+                baseMapGraphics.setColor(Color.BLACK);
+                baseMapGraphics.fillRect(einsatzX - 280, einsatzY + 280, scalePixel, 5);
+                String distanceString = roundDistance + "m";
+                if (roundDistance > 1000) {
+                    distanceString = (roundDistance / 1000) + "km";
+                }
+                int width = baseMapGraphics.getFontMetrics().stringWidth(distanceString);
+                baseMapGraphics.drawString(distanceString, einsatzX - 280 + scalePixel / 2 - width / 2, einsatzY + 300);
+
+
                 // Cut image to size with EinsatzLocation in the middle and Save Image
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 ImageIO.write(baseMapBuffer.getSubimage(einsatzX - 320, einsatzY - 320, 640, 640),
@@ -218,7 +244,7 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
         dotImageGraphics.dispose();
         return dotImage;
     }
-
+    
     private BufferedImage mapMarkerSmall(Color color) {
         BufferedImage dotImage = new BufferedImage(24, 24, BufferedImage.TYPE_INT_ARGB);
         Graphics2D dotImageGraphics = (Graphics2D) dotImage.getGraphics();
@@ -238,6 +264,35 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
         dotImageGraphics.fillRect(12, 16, 1, 3);
         dotImageGraphics.dispose();
         return dotImage;
+    }
+
+    private double haversine(double lat1, double lon1, double lat2, double lon2) {
+        // Mean Earth Radius, as recommended for use by
+        // the International Union of Geodesy and Geophysics,
+        // see http://rosettacode.org/wiki/Haversine_formula
+        double earthRadius = 6371000.0; // in meters
+
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        lat1 = Math.toRadians(lat1);
+        lat2 = Math.toRadians(lat2);
+
+        double a = Math.pow(Math.sin(dLat / 2),2) + Math.pow(Math.sin(dLon / 2),2) * Math.cos(lat1) * Math.cos(lat2);
+        double c = 2 * Math.asin(Math.sqrt(a));
+        return earthRadius * c;
+    }
+
+    private long getRoundNum(long num) {
+        // Thanks to https://github.com/Leaflet/Leaflet/blob/master/src/control/Control.Scale.js#L114
+        long pow10 = (long) Math.pow(10, ((long)Math.floor(num) + "").length() -1);
+        long d = num / pow10;
+
+        d = d >= 10 ? 10 :
+            d >= 5 ? 5 :
+            d >= 3 ? 3 :
+            d >= 2 ? 2 : 1;
+
+        return pow10 * d;
     }
 
 }
