@@ -13,12 +13,17 @@ public class OsmHydrant {
         OsmConnection connection = new OsmConnection("https://overpass-api.de/api/", "my user agent");
         OverpassMapDataDao overpass = new OverpassMapDataDao(connection);
 
-        String query = "node[emergency=fire_hydrant](" +
+        String query = "(node[emergency=fire_hydrant](" +
                 einsatzBox[0].getLatitudeInDegrees() + "," +
                 einsatzBox[0].getLongitudeInDegrees() + "," +
                 einsatzBox[1].getLatitudeInDegrees() + "," +
-                einsatzBox[1].getLongitudeInDegrees() + ")" +
-                ";out;";
+                einsatzBox[1].getLongitudeInDegrees() + ");" +
+                "node[emergency=suction_point](" +
+                einsatzBox[0].getLatitudeInDegrees() + "," +
+                einsatzBox[0].getLongitudeInDegrees() + "," +
+                einsatzBox[1].getLatitudeInDegrees() + "," +
+                einsatzBox[1].getLongitudeInDegrees() + ");" +
+                ");out;";
         overpass.queryElements(query, mapDataHandler);
 
         return mapDataHandler.getNodes();

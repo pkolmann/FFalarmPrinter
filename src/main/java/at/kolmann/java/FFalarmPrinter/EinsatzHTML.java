@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class EinsatzHTML {
@@ -258,30 +259,113 @@ public class EinsatzHTML {
 
         // add hydrants as markers...
         StringBuilder hydrantMarkers = new StringBuilder();
+        hydrantMarkers.append("                        const infowindow = new google.maps.InfoWindow();\n");
         int markerId = 0;
         for (Node hydrant : hydrants) {
             if (hydrant.isDeleted()) {
                 continue;
             }
+
+            StringBuilder hydrantText = new StringBuilder();
+            hydrantText.append("ID: marker").append(markerId).append("<br />");
+            System.out.println("ID: marker" + markerId);
+            Map<String, String> tags = hydrant.getTags();
+            if (tags.containsKey("emergency") && tags.get("emergency").equalsIgnoreCase("suction_point")) {
+                hydrantText.append("Ansaugplatz (für Pumpe)<br />");
+            } else {
+                boolean couplingTextStarted = false;
+                if (tags.containsKey("fire_hydrant:coupling_type")) {
+                    hydrantText.append("Kupplung: ").append(tags.get("fire_hydrant:coupling_type"));
+                    couplingTextStarted = true;
+                }
+                if (tags.containsKey("fire_hydrant:couplings")) {
+                    if (!couplingTextStarted) {
+                        hydrantText.append("Kupplung: ");
+                        couplingTextStarted = true;
+                    } else {
+                        hydrantText.append(", ");
+                    }
+                    hydrantText.append(tags.get("fire_hydrant:couplings"));
+                }
+                if (couplingTextStarted) {
+                    hydrantText.append("<br />");
+                }
+                couplingTextStarted = false;
+                if (tags.containsKey("couplings:type")) {
+                    hydrantText.append("Kupplung: ").append(tags.get("couplings:type"));
+                    couplingTextStarted = true;
+                }
+                if (tags.containsKey("couplings:diameters")) {
+                    if (!couplingTextStarted) {
+                        hydrantText.append("Kupplung: ");
+                        couplingTextStarted = true;
+                    } else {
+                        hydrantText.append(", ");
+                    }
+                    hydrantText.append(tags.get("couplings:diameters"));
+                }
+                if (couplingTextStarted) {
+                    hydrantText.append("<br />");
+                }
+
+                if (tags.containsKey("fire_hydrant:type")) {
+                    switch (tags.get("fire_hydrant:type").toLowerCase()) {
+                        case "pillar":
+                            hydrantText.append("Art: Überflur-Hydrant<br />");
+                            break;
+                        case "underground":
+                            hydrantText.append("Art: Unterflur-Hydrant<br />");
+                            break;
+                        case "wall":
+                            hydrantText.append("Art: Wandanschluss<br />");
+                            break;
+                        case "pipe":
+                            hydrantText.append("Art: Steigleitung<br />");
+                            break;
+                    }
+                }
+            }
+
+            for (Map.Entry<String, String> entry : tags.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                System.out.println("Key: " + key + ", Value: " + value);
+
+            }
+
+            System.out.println(hydrantText.toString());
+            System.out.println("--------");
+            System.out.println();
+
             hydrantMarkers.append("            const marker");
             hydrantMarkers.append(markerId);
-            markerId++;
-            hydrantMarkers.append("= new google.maps.Marker({\n");
-            hydrantMarkers.append("                    position: {lat: ");
+            hydrantMarkers.append(" = new google.maps.Marker({\n");
+            hydrantMarkers.append("                position: {lat: ");
             hydrantMarkers.append(hydrant.getPosition().getLatitude());
             hydrantMarkers.append(", lng: ");
             hydrantMarkers.append(hydrant.getPosition().getLongitude());
             hydrantMarkers.append("},\n");
-            hydrantMarkers.append("            map: map,\n");
-            hydrantMarkers.append("                    icon: {\n");
-            hydrantMarkers.append("                url: \"http://maps.google.com/mapfiles/ms/icons/blue-dot.png\"\n");
-            hydrantMarkers.append("            }\n");
-            hydrantMarkers.append("            });\n\n");
-//                    Map<String, String> tags = hydrant.getTags();
-//                    tags.forEach((k,v)->System.out.println("Key: " + k + " - Value: " + v));
-//
-//                    System.out.println("--------");
-//                    System.out.println();
+            hydrantMarkers.append("                map: map,\n");
+            hydrantMarkers.append("                icon: {\n");
+            hydrantMarkers.append("                    url: \"http://maps.google.com/mapfiles/ms/icons/blue-dot.png\"\n");
+            hydrantMarkers.append("                }\n");
+            hydrantMarkers.append("            });\n");
+            if (hydrantText.length() > 0) {
+                hydrantMarkers.append("            google.maps.event.addListener(marker");
+                hydrantMarkers.append(markerId);
+                hydrantMarkers.append(", 'click', function() {\n");
+                hydrantMarkers.append("                infowindow.setContent(\"");
+                hydrantMarkers.append(hydrantText.toString());
+                hydrantMarkers.append("\");\n");
+                hydrantMarkers.append("                infowindow.open(map, marker");
+                hydrantMarkers.append(markerId);
+                hydrantMarkers.append(");\n");
+                hydrantMarkers.append("            });\n");
+                hydrantMarkers.append("\n");
+            }
+            hydrantMarkers.append("            \n");
+            markerId++;
+
         }
         template = template.replaceAll("@@MARKERS@@", hydrantMarkers.toString());
 
