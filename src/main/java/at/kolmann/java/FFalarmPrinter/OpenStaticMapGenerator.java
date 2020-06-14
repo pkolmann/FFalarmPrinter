@@ -9,12 +9,12 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class OpenStaticMapGenerator implements StaticMapGenerator{
+public class OpenStaticMapGenerator implements StaticMapGenerator {
+    private  Config config;
     private final GeoApiContext context;
 
     private byte[] mapsImage = null;
@@ -23,6 +23,7 @@ public class OpenStaticMapGenerator implements StaticMapGenerator{
             Config config,
             GeoApiContext context
     ) {
+        this.config = config;
         this.context = context;
     }
 
@@ -33,17 +34,6 @@ public class OpenStaticMapGenerator implements StaticMapGenerator{
     ) {
         if (route != null) {
             try {
-//                StaticMapsRequest.Markers markerA = new StaticMapsRequest.Markers();
-//                markerA.addLocation(new LatLng(
-//                        config.getDouble("FeuerwehrhausLocationLat"),
-//                        config.getDouble("FeuerwehrhausLocationLon")
-//                ));
-//                markerA.label("A");
-//
-//                StaticMapsRequest.Markers markerE = new StaticMapsRequest.Markers();
-//                markerE.addLocation(einsatzLatLng);
-//                markerE.label("E");
-
                 int mapZoom = 13;
                 if (route.legs[0].distance.inMeters < 5000) {
                     mapZoom = 15;
@@ -67,7 +57,7 @@ public class OpenStaticMapGenerator implements StaticMapGenerator{
                     ytile=((1<<mapZoom)-1);
 
                 BufferedImage baseMapBuffer = new BufferedImage(256 * 5, 256 * 5, BufferedImage.TYPE_INT_RGB);
-                Graphics baseMapGraphics = baseMapBuffer.getGraphics();
+                Graphics2D baseMapGraphics = (Graphics2D) baseMapBuffer.getGraphics();
                 int xOffset = 0;
                 int yOffset = 0;
                 for (int x = xtile - 2; x <= xtile + 2; x++) {
@@ -93,56 +83,78 @@ public class OpenStaticMapGenerator implements StaticMapGenerator{
                     xOffset += 256;
                 }
 
-                double north = Math.toDegrees(Math.atan(Math.sinh(Math.PI - (2.0 * Math.PI * (ytile - 2)) / Math.pow(2.0, mapZoom))));
-                double south = Math.toDegrees(Math.atan(Math.sinh(Math.PI - (2.0 * Math.PI * (ytile + 3)) / Math.pow(2.0, mapZoom))));
-                double west = (xtile - 2) / Math.pow(2.0, mapZoom) * 360.0 - 180;
-                double east = (xtile + 3) / Math.pow(2.0, mapZoom) * 360.0 - 180;
-                System.out.println("N: " + north + " S: " + south + " W: " + west + " E: " + east);
+                double north = tile2lat(ytile - 2, mapZoom);
+                double south = tile2lat(ytile + 3, mapZoom);
+                double west = tile2lon(xtile - 2, mapZoom);
+                double east = tile2lon(xtile + 3, mapZoom);
 
                 double xPixel = (north - south) / (256 * 5);
                 double yPixel = (east - west) / (256 * 5);
 
-                System.out.println("xPixel: " + xPixel + ", yPixel: " + yPixel);
-
-
+                int lastX = -1;
+                int lastY = -1;
                 for (LatLng routePoint: route.overviewPolyline.decodePath()) {
                     if (routePoint.lat > north || routePoint.lat < south) continue;
                     if (routePoint.lng > east || routePoint.lng < west) continue;
-                    System.out.println("routePoint: " + routePoint.lat + "," + routePoint.lng);
 
-                    int pointX = (int)Math.floor((routePoint.lng - west) / yPixel);
-                    int pointY = (int)Math.floor((north - routePoint.lat) /  xPixel);
+                    int pointX = coord2pixel(routePoint.lng - west, yPixel);
+                    int pointY = coord2pixel(north - routePoint.lat, xPixel);
+                    if (lastX < 0 || lastY < 0) {
+                        lastX = pointX;
+                        lastY = pointY;
+                        continue;
+                    }
                     baseMapGraphics.setColor(Color.BLUE);
-                    baseMapGraphics.fillOval(pointX, pointY, 10, 10);
+                    baseMapGraphics.setStroke(new BasicStroke(5));
+                    baseMapGraphics.drawLine(lastX, lastY, pointX, pointY);
+                    lastX = pointX;
+                    lastY = pointY;
+                }
+
+                // Feuerwehrhaus im Image
+                if (
+                        config.getDouble("FeuerwehrhausLocationLat") < north &&
+                        config.getDouble("FeuerwehrhausLocationLat") > south &&
+                        config.getDouble("FeuerwehrhausLocationLon") > west &&
+                        config.getDouble("FeuerwehrhausLocationLon") < east
+                ) {
+                    BufferedImage greenDot = mapMarker(Color.GREEN);
+                    int FFx = coord2pixel(config.getDouble("FeuerwehrhausLocationLon") - west, yPixel);
+                    int FFy = coord2pixel(north - config.getDouble("FeuerwehrhausLocationLat"), xPixel);
+                    FFx = FFx - (int)Math.floor((double)greenDot.getWidth() / 2);
+                    FFy = FFy - greenDot.getHeight();
+                    baseMapGraphics.drawImage(greenDot, FFx, FFy, null);
                 }
 
                 // Einsatzort im Image
-                int einsatzX = (int)Math.floor((einsatzLatLng.lng - west) / yPixel);
-                int einsatzY = (int)Math.floor((north - einsatzLatLng.lat) /  xPixel);
+                int einsatzX = coord2pixel(einsatzLatLng.lng - west, yPixel);
+                int einsatzY = coord2pixel(north - einsatzLatLng.lat,  xPixel);
                 System.out.println("Einsatz: " + einsatzX + " , " + einsatzY);
 
-                BufferedImage redDot = ImageIO.read(new File(System.getProperty("user.dir") + File.separator + "red-dot.png"));
+                BufferedImage redDot = mapMarker(Color.RED);
+                BufferedImage blueDot = mapMarker(Color.BLUE);
+
                 einsatzX = einsatzX - (int)Math.floor((double)redDot.getWidth() / 2);
                 einsatzY = einsatzY - redDot.getHeight();
                 baseMapGraphics.drawImage(redDot, einsatzX, einsatzY, null);
 
 
+                // add hydrants as markers...
+                for (Node hydrant : hydrants) {
+                    if (hydrant.isDeleted()) {
+                        continue;
+                    }
+                    int hydrantX = coord2pixel(hydrant.getPosition().getLongitude() - west, yPixel);
+                    int hydrantY = coord2pixel(north - hydrant.getPosition().getLatitude(), xPixel);
+                    hydrantX = hydrantX - (int)Math.floor((double)blueDot.getWidth() / 2);
+                    hydrantY = hydrantY - blueDot.getHeight();
+                    baseMapGraphics.drawImage(blueDot, hydrantX, hydrantY, null);
+                }
 
-//                // add hydrants as markers...
-//                StaticMapsRequest.Markers hydrantMarkers = new StaticMapsRequest.Markers();
-//                for (Node hydrant : hydrants) {
-//                    if (hydrant.isDeleted()) {
-//                        continue;
-//                    }
-//                    hydrantMarkers.addLocation(new LatLng(hydrant.getPosition().getLatitude(), hydrant.getPosition().getLongitude()));
-//                    hydrantMarkers.label("H");
-//                    hydrantMarkers.size(StaticMapsRequest.Markers.MarkersSize.tiny);
-//                    hydrantMarkers.color("blue");
-//                }
-
-                // Save Image
+                // Cut image to size with EinsatzLocation in the middle and Save Image
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                ImageIO.write(baseMapBuffer, "png", outputStream);
+                ImageIO.write(baseMapBuffer.getSubimage(einsatzX - 320, einsatzY - 320, 640, 640),
+                        "png", outputStream);
                 mapsImage = outputStream.toByteArray();
 
             } catch (Exception e) {
@@ -162,5 +174,39 @@ public class OpenStaticMapGenerator implements StaticMapGenerator{
             processMapImage(route, einsatzLatLng, hydrants);
         }
         return mapsImage;
+    }
+
+    private double tile2lon(int x, int z) {
+        return x / Math.pow(2.0, z) * 360.0 - 180;
+    }
+
+    private double tile2lat(int y, int z) {
+        double n = Math.PI - (2.0 * Math.PI * y) / Math.pow(2.0, z);
+        return Math.toDegrees(Math.atan(Math.sinh(n)));
+    }
+
+    private int coord2pixel(double coord, double pixelDivisor) {
+        return (int) Math.floor((coord) / pixelDivisor);
+    }
+
+    private BufferedImage mapMarker(Color color) {
+        BufferedImage dotImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D dotImageGraphics = (Graphics2D) dotImage.getGraphics();
+        dotImageGraphics.setBackground(new Color(1f, 0f, 0f, 0f));
+        dotImageGraphics.setColor(color);
+        dotImageGraphics.fillOval(4, 0, 23, 23);
+        dotImageGraphics.setColor(Color.BLACK);
+        dotImageGraphics.setStroke(new BasicStroke(1));
+        dotImageGraphics.drawOval(4, 0, 23, 23);
+        dotImageGraphics.setColor(color);
+        dotImageGraphics.setStroke(new BasicStroke(4));
+        dotImageGraphics.fillRect(14, 23, 3, 8);
+        dotImageGraphics.setColor(Color.BLACK);
+        dotImageGraphics.setStroke(new BasicStroke(1));
+        dotImageGraphics.drawRect(14, 23, 3, 8);
+        dotImageGraphics.setColor(color);
+        dotImageGraphics.fillRect(15, 22, 2, 4);
+        dotImageGraphics.dispose();
+        return dotImage;
     }
 }

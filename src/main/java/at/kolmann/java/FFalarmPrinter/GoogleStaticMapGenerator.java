@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class GoogleStaticMapGenerator implements StaticMapGenerator{
+public class GoogleStaticMapGenerator implements StaticMapGenerator {
     private final Config config;
     private final GeoApiContext context;
 
