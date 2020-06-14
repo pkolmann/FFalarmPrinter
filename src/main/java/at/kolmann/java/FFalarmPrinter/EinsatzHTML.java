@@ -267,8 +267,6 @@ public class EinsatzHTML {
             }
 
             StringBuilder hydrantText = new StringBuilder();
-            hydrantText.append("ID: marker").append(markerId).append("<br />");
-            System.out.println("ID: marker" + markerId);
             Map<String, String> tags = hydrant.getTags();
             if (tags.containsKey("emergency") && tags.get("emergency").equalsIgnoreCase("suction_point")) {
                 hydrantText.append("Ansaugplatz (für Pumpe)<br />");
@@ -326,16 +324,16 @@ public class EinsatzHTML {
                 }
             }
 
-            for (Map.Entry<String, String> entry : tags.entrySet()) {
-                String key = entry.getKey();
-                String value = entry.getValue();
-                System.out.println("Key: " + key + ", Value: " + value);
-
-            }
-
-            System.out.println(hydrantText.toString());
-            System.out.println("--------");
-            System.out.println();
+//            for (Map.Entry<String, String> entry : tags.entrySet()) {
+//                String key = entry.getKey();
+//                String value = entry.getValue();
+//                System.out.println("Key: " + key + ", Value: " + value);
+//
+//            }
+//
+//            System.out.println(hydrantText.toString());
+//            System.out.println("--------");
+//            System.out.println();
 
             hydrantMarkers.append("            const marker");
             hydrantMarkers.append(markerId);
