@@ -72,7 +72,11 @@ public class EinsatzData {
             System.out.println("Einsatz Daten " + i + ":");
             String alarmPath = savePath + File.separator + alarmString + "-" +
                     einsatzData.getJSONObject(i).getString("EinsatzID");
-            einsatz.process(einsatzData.getJSONObject(i), alarmPath);
+            try {
+                einsatz.process(einsatzData.getJSONObject(i), alarmPath);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             System.out.println("========");
         }
 

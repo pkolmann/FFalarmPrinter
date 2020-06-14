@@ -15,10 +15,11 @@
   "_comment_saveWEBlocation": "Directory where files will be saved",
   "saveWEBlocation": "einsatzWEB",
   
-  "_comment_GoogleMapsApiKey": "Add your google Maps api key",
-  "googleMapsApiKey": "xxxx",
+  "_comment_GoogleMapsApiKeyStaticMap":   "Add your google Maps api key for static map images (you will need to pay for this service!)",
+  "_comment_GoogleMapsApiKeyStaticMap_1": "if set to null, basemap will be used as StaticMapProvider",
+  "googleMapsApiKeyStaticMap": null,
   
-  "_comment_GoogleMapsApiKeyWeb": "Possible different API Key for HTML pages available via web",
+  "_comment_GoogleMapsApiKeyWeb": "API Key for HTML pages available via web and directions rendering",
   "googleMapsApiKeyWeb": null,
   
   "_comment_FeuerwehrhausLocation": "Location des eigenen Feuerwehrhauses für Routing",

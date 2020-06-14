@@ -16,6 +16,13 @@ import java.util.ArrayList;
 public class OpenStaticMapGenerator implements StaticMapGenerator {
     private  Config config;
     private final GeoApiContext context;
+    private final String[] tileServer = {
+            "https://maps.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
+            "https://maps1.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
+            "https://maps2.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
+            "https://maps3.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
+            "https://maps4.wien.gv.at/basemap/geolandbasemap/normal/google3857/"
+    };
 
     private byte[] mapsImage = null;
 
@@ -60,10 +67,11 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                 Graphics2D baseMapGraphics = (Graphics2D) baseMapBuffer.getGraphics();
                 int xOffset = 0;
                 int yOffset = 0;
+                int tileServerId = 0;
                 for (int x = xtile - 2; x <= xtile + 2; x++) {
                     for (int y = ytile - 2; y <= ytile + 2; y++) {
 
-                        String urlStr = "https://maps1.wien.gv.at/basemap/geolandbasemap/normal/google3857/" +
+                        String urlStr = tileServer[tileServerId] +
                                 mapZoom +
                                 "/" +
                                 y +
@@ -71,6 +79,10 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                                 x +
                                 ".png";
                         URL imageUrl =  new URL(urlStr);
+                        System.out.println(imageUrl.toString());
+                        tileServerId++;
+                        if (tileServerId >= tileServer.length) tileServerId = 0;
+
                         try {
                             Image image = ImageIO.read(imageUrl);
                             baseMapGraphics.drawImage(image, xOffset, yOffset, null);
@@ -132,14 +144,13 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                 System.out.println("Einsatz: " + einsatzX + " , " + einsatzY);
 
                 BufferedImage redDot = mapMarker(Color.RED);
-                BufferedImage blueDot = mapMarker(Color.BLUE);
-
                 einsatzX = einsatzX - (int)Math.floor((double)redDot.getWidth() / 2);
                 einsatzY = einsatzY - redDot.getHeight();
                 baseMapGraphics.drawImage(redDot, einsatzX, einsatzY, null);
 
 
                 // add hydrants as markers...
+                BufferedImage blueDot = mapMarkerSmall(Color.BLUE);
                 for (Node hydrant : hydrants) {
                     if (hydrant.isDeleted()) {
                         continue;
@@ -209,4 +220,26 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
         dotImageGraphics.dispose();
         return dotImage;
     }
+
+    private BufferedImage mapMarkerSmall(Color color) {
+        BufferedImage dotImage = new BufferedImage(24, 24, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D dotImageGraphics = (Graphics2D) dotImage.getGraphics();
+        dotImageGraphics.setBackground(new Color(1f, 0f, 0f, 0f));
+        dotImageGraphics.setColor(color);
+        dotImageGraphics.fillOval(3, 0, 18, 18);
+        dotImageGraphics.setColor(Color.BLACK);
+        dotImageGraphics.setStroke(new BasicStroke(1));
+        dotImageGraphics.drawOval(3, 0, 18, 18);
+        dotImageGraphics.setColor(color);
+        dotImageGraphics.setStroke(new BasicStroke(3));
+        dotImageGraphics.fillRect(11, 18, 2, 5);
+        dotImageGraphics.setColor(Color.BLACK);
+        dotImageGraphics.setStroke(new BasicStroke(1));
+        dotImageGraphics.drawRect(11, 18, 2, 5);
+        dotImageGraphics.setColor(color);
+        dotImageGraphics.fillRect(12, 16, 1, 3);
+        dotImageGraphics.dispose();
+        return dotImage;
+    }
+
 }

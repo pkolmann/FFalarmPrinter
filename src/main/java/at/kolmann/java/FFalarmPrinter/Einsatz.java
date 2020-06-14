@@ -29,7 +29,7 @@ public class Einsatz {
         einsatzPrint = new EinsatzPrint(config, lastEinsatzStore);
     }
 
-    public void process(JSONObject einsatz, String alarmPath) {
+    public void process(JSONObject einsatz, String alarmPath) throws IOException {
         String einsatzID = einsatz.getString("EinsatzID");
         System.out.println(einsatzID);
 

@@ -22,17 +22,30 @@ public class EinsatzRouter {
 
     private StaticMapGenerator staticMapGenerator;
 
-    public EinsatzRouter(Config config) {
+    public EinsatzRouter(Config config) throws IOException {
         this.config = config;
 
+        String googleApiKey = config.getString("googleMapsApiKeyWeb");
+        if (config.has("googleMapsApiKeyStaticMap") && config.getString("googleMapsApiKeyStaticMap") != null) {
+            googleApiKey = config.getString("googleMapsApiKeyStaticMap");
+        }
+
+        if (googleApiKey == null) {
+            throw new IOException("No Google API Key found");
+        }
+
         context = new GeoApiContext.Builder()
-                .apiKey(config.getString("googleMapsApiKey"))
+                .apiKey(googleApiKey)
                 .disableRetries()
                 .build();
 
         directionsRequest = new DirectionsApiRequest(context);
-//        staticMapGenerator = new GoogleStaticMapGenerator(config, context);
-        staticMapGenerator = new OpenStaticMapGenerator(config, context);
+
+        if (config.has("googleMapsApiKeyStaticMap") && config.getString("googleMapsApiKeyStaticMap") != null) {
+            staticMapGenerator = new GoogleStaticMapGenerator(config, context);
+        } else {
+            staticMapGenerator = new OpenStaticMapGenerator(config, context);
+        }
     }
 
     public void shutdown() {
