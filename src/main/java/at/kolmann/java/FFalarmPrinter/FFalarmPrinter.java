@@ -6,6 +6,8 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Calendar;
+
 
 public class FFalarmPrinter {
     private final Florian10Fetcher florian10Fetcher;
@@ -28,6 +30,7 @@ public class FFalarmPrinter {
 
     public void run() {
 //        System.out.println(System.getProperty("os.name"));
+        Calendar myCal = Calendar.getInstance();
 
         String urlToFetch = null;
         if (config.get("wastlUrl") instanceof String) {
@@ -40,9 +43,11 @@ public class FFalarmPrinter {
         JSONObject florian10Data = florian10Fetcher.fetchFlorian10Data(urlToFetch);
 
         if (florian10Data == null) {
+            System.out.println(String.format(("%tY-%<tm-%<td %<tH:%<tM:%<tS"), myCal));
             System.out.println("Fetching Data failed....");
         } else {
             if (florian10Data.has("error")) {
+                System.out.println(String.format(("%tY-%<tm-%<td %<tH:%<tM:%<tS"), myCal));
                 System.out.println("Failed to fetch data:");
                 System.out.println();
                 System.out.println(florian10Data.toString(2));
@@ -53,6 +58,7 @@ public class FFalarmPrinter {
                                 florian10Data.get("CurrentState").equals("waiting")
                         ) && florian10Data.has("Token")
                 ) {
+                    System.out.println(String.format(("%tY-%<tm-%<td %<tH:%<tM:%<tS"), myCal));
                     System.out.println("Token muss erst freigeschalten werden:");
                     System.out.println();
                     System.out.println(florian10Data.get("Token"));
@@ -60,6 +66,7 @@ public class FFalarmPrinter {
                 } else if (florian10Data.getString("CurrentState").equals("data") && florian10Data.has("EinsatzData")) {
                     einsatzData.process(florian10Data);
                 } else if (florian10Data.getString("CurrentState").equals("error")) {
+                    System.out.println(String.format(("%tY-%<tm-%<td %<tH:%<tM:%<tS"), myCal));
                     System.out.println("Fehler von Florian Krems gemeldet:");
                     JSONArray einsatzErrors = florian10Data.getJSONArray("Errors");
                     for (int i = 0; i < einsatzErrors.length(); i++) {
@@ -73,6 +80,7 @@ public class FFalarmPrinter {
                     }
                     System.out.println();
                 } else {
+                    System.out.println(String.format(("%tY-%<tm-%<td %<tH:%<tM:%<tS"), myCal));
                     System.out.println("Unknown CurrentState!");
                     System.out.println();
                     System.out.println();
@@ -80,6 +88,7 @@ public class FFalarmPrinter {
                     System.out.println();
                 }
             } else {
+                System.out.println(String.format(("%tY-%<tm-%<td %<tH:%<tM:%<tS"), myCal));
                 System.out.println("No 'CurrentState' found in Response!");
                 System.out.println();
                 System.out.println("Data from Florian 10:");
