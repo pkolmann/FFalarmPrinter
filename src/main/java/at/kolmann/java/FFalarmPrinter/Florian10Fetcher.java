@@ -49,10 +49,10 @@ public class Florian10Fetcher {
             return florian10Data;
 
         } catch (MalformedURLException mue) {
-            System.out.println("Malformed URL exception....");
+            System.out.println("Florian10Fetcher: Malformed URL exception....");
             mue.printStackTrace();
         } catch (IOException ioe) {
-            System.out.println("IOException....");
+            System.out.println("Florian10Fetcher: IOException....");
             ioe.printStackTrace();
         }
 

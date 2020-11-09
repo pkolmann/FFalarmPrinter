@@ -15,10 +15,10 @@ public class EinsatzRouter {
     private final DirectionsApiRequest directionsRequest;
     private byte[] mapsImage;
     private DirectionsResult result;
-    private DirectionsRoute route;
+    private DirectionsRoute route = null;
 
     private String destination;
-    private LatLng einsatzLatLng;
+    private LatLng einsatzLatLng = null;
 
     private StaticMapGenerator staticMapGenerator;
 
@@ -90,11 +90,13 @@ public class EinsatzRouter {
                         .await();
             }
         } catch (ApiException | IOException | InterruptedException e) {
+            System.out.println("Failed to get Route in EinsatzRouter.java:");
             e.printStackTrace();
+            System.out.println("-----");
         }
 
         // only use route 0
-        if (result.routes.length > 0) {
+        if (result != null && result.routes.length > 0) {
             route = result.routes[0];
             einsatzLatLng = result.routes[0].legs[result.routes[0].legs.length - 1].endLocation;
 

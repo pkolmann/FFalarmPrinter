@@ -34,6 +34,7 @@ public class Einsatz {
         System.out.println(einsatzID);
 
         String einsatzAdresse = getEinsatzAdresse(einsatz);
+        System.out.println("Einsatzadresse: " + einsatzAdresse);
 
         if (einsatzAdresse.length() > 0) {
             EinsatzRouter einsatzRouter = new EinsatzRouter(config);
@@ -49,13 +50,19 @@ public class Einsatz {
                 e.printStackTrace();
             }
 
-            // Mean Earth Radius, as recommended for use by
-            // the International Union of Geodesy and Geophysics,
-            // see http://rosettacode.org/wiki/Haversine_formula
-            double earthRadius = 6371000.0; // in meters
-            GeoLocation[] einsatzBox = einsatzLocation.boundingCoordinates(hydrantSearchRadius, earthRadius);
-            OsmHydrant osmHydrant = new OsmHydrant();
-            ArrayList<Node> hydrants = osmHydrant.getHydrants(einsatzBox);
+            ArrayList<Node> hydrants = null;
+            if (einsatzLatLng != null) {
+                GeoLocation einsatzLocation = GeoLocation.fromDegrees(einsatzLatLng.lat, einsatzLatLng.lng);
+
+                // Mean Earth Radius, as recommended for use by
+                // the International Union of Geodesy and Geophysics,
+                // see http://rosettacode.org/wiki/Haversine_formula
+                double earthRadius = 6371000.0; // in meters
+                GeoLocation[] einsatzBox = einsatzLocation.boundingCoordinates(hydrantSearchRadius, earthRadius);
+                OsmHydrant osmHydrant = new OsmHydrant();
+
+                hydrants = osmHydrant.getHydrants(einsatzBox);
+            }
 
             byte[] einsatzMap = einsatzRouter.getMapsImage(hydrants);
             if (einsatzMap != null) {

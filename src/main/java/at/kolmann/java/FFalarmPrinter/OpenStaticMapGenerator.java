@@ -154,15 +154,17 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
 
                 // add hydrants as markers...
                 BufferedImage blueDot = mapMarkerSmall(Color.BLUE);
-                for (Node hydrant : hydrants) {
-                    if (hydrant.isDeleted()) {
-                        continue;
+                if (hydrants != null) {
+                    for (Node hydrant : hydrants) {
+                        if (hydrant.isDeleted()) {
+                            continue;
+                        }
+                        int hydrantX = coord2pixel(hydrant.getPosition().getLongitude() - west, yPixel);
+                        int hydrantY = coord2pixel(north - hydrant.getPosition().getLatitude(), xPixel);
+                        hydrantX = hydrantX - (int) Math.floor((double) blueDot.getWidth() / 2);
+                        hydrantY = hydrantY - blueDot.getHeight();
+                        baseMapGraphics.drawImage(blueDot, hydrantX, hydrantY, null);
                     }
-                    int hydrantX = coord2pixel(hydrant.getPosition().getLongitude() - west, yPixel);
-                    int hydrantY = coord2pixel(north - hydrant.getPosition().getLatitude(), xPixel);
-                    hydrantX = hydrantX - (int)Math.floor((double)blueDot.getWidth() / 2);
-                    hydrantY = hydrantY - blueDot.getHeight();
-                    baseMapGraphics.drawImage(blueDot, hydrantX, hydrantY, null);
                 }
 
                 // Add scale to bottom

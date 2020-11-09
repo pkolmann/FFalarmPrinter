@@ -58,14 +58,16 @@ public class GoogleStaticMapGenerator implements StaticMapGenerator {
 
                 // add hydrants as markers...
                 StaticMapsRequest.Markers hydrantMarkers = new StaticMapsRequest.Markers();
-                for (Node hydrant : hydrants) {
-                    if (hydrant.isDeleted()) {
-                        continue;
+                if (hydrants != null) {
+                    for (Node hydrant : hydrants) {
+                        if (hydrant.isDeleted()) {
+                            continue;
+                        }
+                        hydrantMarkers.addLocation(new LatLng(hydrant.getPosition().getLatitude(), hydrant.getPosition().getLongitude()));
+                        hydrantMarkers.label("H");
+                        hydrantMarkers.size(StaticMapsRequest.Markers.MarkersSize.tiny);
+                        hydrantMarkers.color("blue");
                     }
-                    hydrantMarkers.addLocation(new LatLng(hydrant.getPosition().getLatitude(), hydrant.getPosition().getLongitude()));
-                    hydrantMarkers.label("H");
-                    hydrantMarkers.size(StaticMapsRequest.Markers.MarkersSize.tiny);
-                    hydrantMarkers.color("blue");
                 }
 
                 mapsImage = new StaticMapsRequest(context)
