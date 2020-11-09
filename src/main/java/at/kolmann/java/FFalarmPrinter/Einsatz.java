@@ -42,17 +42,16 @@ public class Einsatz {
             DirectionsRoute route = einsatzRouter.getRoute(einsatzAdresse);
 
             LatLng einsatzLatLng = einsatzRouter.getEinsatzLatLng();
-            GeoLocation einsatzLocation = GeoLocation.fromDegrees(einsatzLatLng.lat, einsatzLatLng.lng);
-            double hydrantSearchRadius = 100.0;
-            try {
-                hydrantSearchRadius = config.getDouble("hydrantSearchRadius");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
             ArrayList<Node> hydrants = null;
             if (einsatzLatLng != null) {
                 GeoLocation einsatzLocation = GeoLocation.fromDegrees(einsatzLatLng.lat, einsatzLatLng.lng);
+
+                double hydrantSearchRadius = 100.0;
+                try {
+                    hydrantSearchRadius = config.getDouble("hydrantSearchRadius");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 // Mean Earth Radius, as recommended for use by
                 // the International Union of Geodesy and Geophysics,
