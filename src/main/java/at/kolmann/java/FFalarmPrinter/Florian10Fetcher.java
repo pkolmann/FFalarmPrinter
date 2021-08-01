@@ -51,7 +51,7 @@ public class Florian10Fetcher {
 
             connection.setRequestMethod("GET");
 
-            System.out.println("Connection Response: " + connection.getResponseCode());
+//            System.out.println("Connection Response: " + connection.getResponseCode());
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 JSONObject error = new JSONObject();
                 error.put("error", "HTTP Response: " + connection.getResponseCode());
