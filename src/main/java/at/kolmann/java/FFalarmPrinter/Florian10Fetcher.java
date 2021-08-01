@@ -40,8 +40,18 @@ public class Florian10Fetcher {
 
 
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+//            connection.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+//            connection.setRequestProperty("Cache-Control", "no-cache");
+//            connection.setRequestProperty("Pragma", "no-cache");
+//            connection.setRequestProperty("Upgrade-Insecure-Requests", "1");
+//            connection.setRequestProperty("Accept-Encoding", "gzip, deflate,br");
+//            connection.setRequestProperty("Accept-Language", "de,en-US;q=0.7,en;q=0.3");
+//            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101 Firefox/78.0");
+
+
             connection.setRequestMethod("GET");
 
+            System.out.println("Connection Response: " + connection.getResponseCode());
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 JSONObject error = new JSONObject();
                 error.put("error", "HTTP Response: " + connection.getResponseCode());
