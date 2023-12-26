@@ -3,6 +3,7 @@ package at.kolmann.java.FFalarmPrinter;
 import org.json.JSONObject;
 
 import java.io.*;
+import java.math.BigDecimal;
 
 public class Config {
     private JSONObject config;
@@ -76,6 +77,10 @@ public class Config {
         Object value = get(key);
         if (value instanceof Double) {
             return (double) value;
+        }
+
+        if (value instanceof BigDecimal) {
+            return ((BigDecimal) value).doubleValue();
         }
 
         if (value instanceof Integer) {
