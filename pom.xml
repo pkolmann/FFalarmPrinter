@@ -6,7 +6,7 @@
 
     <groupId>at.kolmann.java</groupId>
     <artifactId>FFalarmPrinter</artifactId>
-    <version>2021.08.01</version>
+    <version>2023.12.27</version>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>

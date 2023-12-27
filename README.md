@@ -23,6 +23,6 @@ It's important to have the current working directory set to the proper directory
 
 On linux I have it running via:
 
-`cd $HOME/FFalarmPrinter; java -cp target/FFalarmPrinter-0.1-jar-with-dependencies.jar Main`
+`cd $HOME/FFalarmPrinter; java -jar target/FFalarmPrinter-2023.12.27-jar-with-dependencies.jar`
 
 
