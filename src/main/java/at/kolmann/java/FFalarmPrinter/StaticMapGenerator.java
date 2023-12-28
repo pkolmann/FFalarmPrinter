@@ -1,15 +1,15 @@
 package at.kolmann.java.FFalarmPrinter;
 
-import com.google.maps.model.DirectionsRoute;
-import com.google.maps.model.LatLng;
 import de.westnordost.osmapi.map.data.Node;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
 public interface StaticMapGenerator {
     byte[] getMapsImage(
-            DirectionsRoute route,
-            LatLng einsatzLatLng,
+            JSONObject route,
+            Double einsatzLng,
+            Double einsatzLat,
             ArrayList<Node> hydrants
     );
 }

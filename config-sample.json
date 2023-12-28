@@ -14,21 +14,19 @@
   
   "_comment_saveWEBlocation": "Directory where files will be saved",
   "saveWEBlocation": "einsatzWEB",
-  
-  "_comment_GoogleMapsApiKeyStaticMap":   "Add your google Maps api key for static map images (you will need to pay for this service!)",
-  "_comment_GoogleMapsApiKeyStaticMap_1": "if set to null, basemap will be used as StaticMapProvider",
-  "googleMapsApiKeyStaticMap": null,
-  
-  "_comment_GoogleMapsApiKeyWeb": "API Key for HTML pages available via web and directions rendering",
-  "googleMapsApiKeyWeb": null,
+
+  "_comment_osrmBaseURL": "Base URL to Open Source Routing Machine (https://github.com/Project-OSRM/osrm-backend/tree/master), will append '/route/v1/driving/...'",
+  "osrmBaseURL": "https://osrm.ff-irgendwo.at",
   
   "_comment_FeuerwehrhausLocation": "Location des eigenen Feuerwehrhauses für Routing",
   "FeuerwehrhausLocationLat": 47.0,
   "FeuerwehrhausLocationLon": 16.0,
-  
-  "_comment_FeuerwehrhausWaypoint": "We need to add a waypoint to have google Maps do proper routes. If set, it will be added as a waypoint without stopover",
-  "FeuerwehrhausLocationWaypoint": null,
-  
+
+  "_comment_FeuerwehrhausWaypointLat": "We need to add a waypoint to have google Maps do proper routes. If set, it will be added as a waypoint",
+  "_comment_FeuerwehrhausWaypointLng": "We need to add a waypoint to have google Maps do proper routes. If set, it will be added as a waypoint",
+  "FeuerwehrhausLocationWaypointLat": null,
+  "FeuerwehrhausLocationWaypointLon": null,
+
   "_comment_FeuerwehrName": "Specify Name to highlight on Alarm-List",
   "FeuerwehrName": "XX",
   

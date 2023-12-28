@@ -36,7 +36,7 @@ public class EinsatzData {
 
         if (einsatzData.length() > 0) {
             // Print current date for logile
-            System.out.println(String.format(("%tY-%<tm-%<td %<tH:%<tM:%<tS"), myCal));
+            System.out.printf("%tY-%<tm-%<td %<tH:%<tM:%<tS%n", myCal);
         }
 
         if (savePath != null && einsatzData.length() > 0) {
@@ -70,10 +70,10 @@ public class EinsatzData {
 
         for (int i = 0; i < einsatzData.length(); i++) {
             System.out.println("Einsatz Daten " + i + ":");
-            String alarmPath = savePath + File.separator + alarmString + "-" +
+            String alarmPath = alarmString + "-" +
                     einsatzData.getJSONObject(i).getString("EinsatzID");
             try {
-                einsatz.process(einsatzData.getJSONObject(i), alarmPath);
+                einsatz.process(einsatzData.getJSONObject(i), savePath, alarmPath);
             } catch (IOException e) {
                 e.printStackTrace();
             }

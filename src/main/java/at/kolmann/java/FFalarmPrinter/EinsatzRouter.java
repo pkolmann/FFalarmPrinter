@@ -1,132 +1,145 @@
 package at.kolmann.java.FFalarmPrinter;
 
-import com.google.maps.DirectionsApiRequest;
-import com.google.maps.GeoApiContext;
-import com.google.maps.errors.ApiException;
-import com.google.maps.model.*;
 import de.westnordost.osmapi.map.data.Node;
+import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 
 public class EinsatzRouter {
     private final Config config;
-    private final GeoApiContext context;
-    private final DirectionsApiRequest directionsRequest;
     private byte[] mapsImage;
-    private DirectionsResult result;
-    private DirectionsRoute route = null;
+    private JSONObject result = null;
+    private JSONObject route = null;
 
-    private String destination;
-    private LatLng einsatzLatLng = null;
+    private Double einsatzLat = null;
+    private Double einsatzLng = null;
 
     private StaticMapGenerator staticMapGenerator;
 
+    private static final HttpClient httpClient = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_2)
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
+
     public EinsatzRouter(Config config) throws IOException {
         this.config = config;
-
-        String googleApiKey = config.getString("googleMapsApiKeyWeb");
-        if (config.has("googleMapsApiKeyStaticMap") && config.getString("googleMapsApiKeyStaticMap") != null) {
-            googleApiKey = config.getString("googleMapsApiKeyStaticMap");
-        }
-
-        if (googleApiKey == null) {
-            throw new IOException("No Google API Key found");
-        }
-
-        context = new GeoApiContext.Builder()
-                .apiKey(googleApiKey)
-                .disableRetries()
-                .build();
-
-        directionsRequest = new DirectionsApiRequest(context);
-
-        if (config.has("googleMapsApiKeyStaticMap") && config.getString("googleMapsApiKeyStaticMap") != null) {
-            staticMapGenerator = new GoogleStaticMapGenerator(config, context);
-        } else {
-            staticMapGenerator = new OpenStaticMapGenerator(config, context);
-        }
+        staticMapGenerator = new OpenStaticMapGenerator(config);
     }
 
-    public void shutdown() {
-        context.shutdown();
-    }
+    public void shutdown() {}
 
-    private void processRoute() {
+    private void processRoute() throws IOException {
         try {
-            if (config.getString("FeuerwehrhausLocationWaypoint") != null) {
-                result = directionsRequest
-                        .origin(
-                                new LatLng(
-                                        config.getDouble("FeuerwehrhausLocationLat"),
-                                        config.getDouble("FeuerwehrhausLocationLon")
-                                )
-                        )
-                        .waypoints(
-                                new DirectionsApiRequest.Waypoint(
-                                        config.getString("FeuerwehrhausLocationWaypoint"),
-                                        false
-                                )
-                        )
-                        .destination(destination)
-                        .mode(TravelMode.DRIVING)
-                        .units(Unit.METRIC)
-                        .region("at")
-                        .language("de-AT")
-                        .await();
-            } else {
-                result = directionsRequest
-                        .origin(
-                                new LatLng(
-                                        config.getDouble("FeuerwehrhausLocationLat"),
-                                        config.getDouble("FeuerwehrhausLocationLon")
-                                )
-                        )
-                        .destination(destination)
-                        .mode(TravelMode.DRIVING)
-                        .units(Unit.METRIC)
-                        .region("at")
-                        .language("de-AT")
-                        .await();
+            if (config.getString("osrmBaseURL") == null) {
+                throw new IOException("osrmBaseURL not defined in config file!");
             }
-        } catch (ApiException | IOException | InterruptedException e) {
+
+            if (this.einsatzLng == null || this.einsatzLat == null) {
+                throw new IOException("Einsatzrouter: EinsatzLng or EinsatzLat IS NULL!");
+            }
+
+            // Build OSRM URI:
+            // https://osrm.ff-irgendwo.at/route/v1/driving/16.18417,47.71375;16.18576,47.71566;16.192861,47.696053?steps=true&overview=full
+            StringBuilder uri = new StringBuilder();
+            uri.append(config.getString("osrmBaseURL"));
+            uri.append("/route/v1/driving/");
+            uri.append(config.getDouble("FeuerwehrhausLocationLon"));
+            uri.append(",");
+            uri.append(config.getDouble("FeuerwehrhausLocationLat"));
+            uri.append(";");
+            if (
+                    config.has("FeuerwehrhausLocationWaypointLon")
+                    && config.has("FeuerwehrhausLocationWaypointLat")
+                    && config.get("FeuerwehrhausLocationWaypointLon") != null
+                    && config.get("FeuerwehrhausLocationWaypointLat") != null
+            ) {
+                uri.append(config.getDouble("FeuerwehrhausLocationWaypointLon"));
+                uri.append(",");
+                uri.append(config.getDouble("FeuerwehrhausLocationWaypointLat"));
+                uri.append(";");
+            }
+            uri.append(this.einsatzLng);
+            uri.append(",");
+            uri.append(this.einsatzLat);
+            uri.append("?steps=true&overview=full");
+
+            System.out.println(uri.toString());
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(URI.create(uri.toString()))
+                    .setHeader("User-Agent", "FF Alarm Printer")
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new IOException("Failed to fetch OSRM data: " + response.statusCode() + "\n\n" + response.body());
+            }
+            // print response body
+            result = new JSONObject(response.body());
+
+        } catch (IOException | InterruptedException e) {
             System.out.println("Failed to get Route in EinsatzRouter.java:");
             e.printStackTrace();
             System.out.println("-----");
         }
 
         // only use route 0
-        if (result != null && result.routes.length > 0) {
-            route = result.routes[0];
-            einsatzLatLng = result.routes[0].legs[result.routes[0].legs.length - 1].endLocation;
-
-        } else {
-            System.out.println("No GeoAPI Result!");
+        if (result == null) {
+            throw new IOException("Failed to get RouteJSON!");
         }
+        if (!result.has("routes")) {
+            throw new IOException("RouteJSON has no 'routes' key!");
+        }
+
+        if (result.getJSONArray("routes").length() < 1) {
+            throw new IOException("RouteJSON has less then 1 routes!");
+        }
+
+        route = result.getJSONArray("routes").getJSONObject(0);
     }
 
 
     public byte[] getMapsImage(ArrayList<Node> hydrants) {
-        if (destination == null) {
+        if (einsatzLng == null || einsatzLat == null) {
+            System.out.println("EinsatzRouter - getMapsImage - einsatzLatLng == null");
             return null;
         }
-        return staticMapGenerator.getMapsImage(route, einsatzLatLng, hydrants);
+        return staticMapGenerator.getMapsImage(route, einsatzLng, einsatzLat, hydrants);
     }
 
-    public DirectionsRoute getRoute(String destination) {
-        if (destination == null) {
+    public JSONObject getRoute(Double einsatzLng, Double einsatzLat) {
+        if (einsatzLng == null || einsatzLat == null) {
             return null;
         }
 
-        this.destination = destination;
+        this.einsatzLng = einsatzLng;
+        this.einsatzLat = einsatzLat;
         if (route == null) {
-            processRoute();
+            try {
+                processRoute();
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
         }
         return route;
     }
 
-    public LatLng getEinsatzLatLng() {
-        return einsatzLatLng;
+    public JSONObject getResult() {
+        return result;
     }
 
+    public Point getEinsatzLatLng() {
+        if (einsatzLat == null || einsatzLng == null) {
+            return  null;
+        }
+        return new Point(einsatzLat, einsatzLng);
+    }
 }

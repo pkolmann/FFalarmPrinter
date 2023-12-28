@@ -1,9 +1,5 @@
 package at.kolmann.java.FFalarmPrinter;
 
-import com.google.maps.ImageResult;
-import com.google.maps.model.DirectionsLeg;
-import com.google.maps.model.DirectionsRoute;
-import com.google.maps.model.DirectionsStep;
 import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
@@ -17,17 +13,17 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.*;
-import com.itextpdf.layout.element.List;
-import com.itextpdf.layout.property.*;
+import com.itextpdf.layout.property.HorizontalAlignment;
+import com.itextpdf.layout.property.TextAlignment;
+import com.itextpdf.layout.property.UnitValue;
+import com.itextpdf.layout.property.VerticalAlignment;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Calendar;
 
 public class EinsatzPDF {
     private final Config config;
@@ -41,7 +37,7 @@ public class EinsatzPDF {
             JSONObject einsatz,
             JSONArray disponierteFF,
             String einsatzAdresse,
-            DirectionsRoute route,
+            JSONObject route,
             byte[] einsatzMap)
     {
         try {
@@ -259,11 +255,11 @@ public class EinsatzPDF {
             long totalDurtion = 0;
 
             if (route != null) {
-                for (DirectionsLeg routeLeg : route.legs) {
-                    totalDistance += routeLeg.distance.inMeters;
-                    if (routeLeg.duration != null) {
-                        totalDurtion += routeLeg.duration.inSeconds;
-                    }
+                if (route.has("duration")) {
+                    totalDurtion = route.getLong("duration");
+                }
+                if (route.has("distance")) {
+                    totalDistance = route.getLong("distance");
                 }
 
                 // Wegstrecke
@@ -327,80 +323,80 @@ public class EinsatzPDF {
                 document.add(mapImage);
             }
 
-            if (totalDistance >= 10000) {
-                document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                document.add(headerTable);
-                document.add(new Paragraph(" "));
-                document.add(new Paragraph(" "));
-
-                Table routeTable = new Table(UnitValue.createPercentArray(new float[] {5, 1})).useAllAvailableWidth();
-
-                for (DirectionsLeg routeLeg : route.legs) {
-                    for (DirectionsStep step : routeLeg.steps) {
-                        cell = new Cell();
-                        Paragraph instructions = new Paragraph();
-                        Pattern patter = Pattern.compile("(<[^>]+>)");
-                        Matcher matcher = patter.matcher(step.htmlInstructions);
-
-                        int pos = 0;
-                        boolean isBold = false;
-                        boolean lastCharIsSpace = false;
-                        int boldStart = 0;
-                        while (matcher.find()) {
-                            if (pos < matcher.start() && !isBold) {
-                                if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
-                                    instructions.add(new Text(" "));
-                                }
-                                instructions.add(new Text(step.htmlInstructions.substring(pos, matcher.start())));
-                                pos = matcher.start();
-                                lastCharIsSpace = checkIfLastCharIsSpace(step.htmlInstructions, pos);
-                            }
-
-                            String marker = matcher.group();
-                            if (marker.equals("<b>")) {
-                                isBold = true;
-                                boldStart = matcher.end();
-                                pos = matcher.end();
-                            } else if (marker.equals("</b>")) {
-                                if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
-                                    instructions.add(new Text(" "));
-                                }
-                                Text boldText = new Text(step.htmlInstructions.substring(boldStart, matcher.start()));
-                                boldText.setFont(bold);
-                                instructions.add(boldText);
-                                pos = matcher.end();
-                                lastCharIsSpace = checkIfLastCharIsSpace(step.htmlInstructions, pos);
-                                isBold = false;
-                                boldStart = 0;
-                            } else {
-                                pos = matcher.end();
-                            }
-                        }
-
-                        if (pos < step.htmlInstructions.length()) {
-                            if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
-                                instructions.add(new Text(" "));
-                            }
-                            instructions.add(new Text(step.htmlInstructions.substring(pos)));
-                        }
-
-                        cell.add(instructions);
-                        cell.setBorder(Border.NO_BORDER);
-                        routeTable.addCell(cell);
-
-                        cell = new Cell();
-                        cell.add(new Paragraph(step.distance.humanReadable)
-                                .setHorizontalAlignment(HorizontalAlignment.RIGHT)
-                        );
-                        cell.setBorder(Border.NO_BORDER);
-                        cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-                        routeTable.addCell(cell);
-                    }
-
-                }
-
-                document.add(routeTable);
-            }
+//            if (totalDistance >= 10000) {
+//                document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+//                document.add(headerTable);
+//                document.add(new Paragraph(" "));
+//                document.add(new Paragraph(" "));
+//
+//                Table routeTable = new Table(UnitValue.createPercentArray(new float[] {5, 1})).useAllAvailableWidth();
+//
+//                for (DirectionsLeg routeLeg : route.legs) {
+//                    for (DirectionsStep step : routeLeg.steps) {
+//                        cell = new Cell();
+//                        Paragraph instructions = new Paragraph();
+//                        Pattern patter = Pattern.compile("(<[^>]+>)");
+//                        Matcher matcher = patter.matcher(step.htmlInstructions);
+//
+//                        int pos = 0;
+//                        boolean isBold = false;
+//                        boolean lastCharIsSpace = false;
+//                        int boldStart = 0;
+//                        while (matcher.find()) {
+//                            if (pos < matcher.start() && !isBold) {
+//                                if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
+//                                    instructions.add(new Text(" "));
+//                                }
+//                                instructions.add(new Text(step.htmlInstructions.substring(pos, matcher.start())));
+//                                pos = matcher.start();
+//                                lastCharIsSpace = checkIfLastCharIsSpace(step.htmlInstructions, pos);
+//                            }
+//
+//                            String marker = matcher.group();
+//                            if (marker.equals("<b>")) {
+//                                isBold = true;
+//                                boldStart = matcher.end();
+//                                pos = matcher.end();
+//                            } else if (marker.equals("</b>")) {
+//                                if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
+//                                    instructions.add(new Text(" "));
+//                                }
+//                                Text boldText = new Text(step.htmlInstructions.substring(boldStart, matcher.start()));
+//                                boldText.setFont(bold);
+//                                instructions.add(boldText);
+//                                pos = matcher.end();
+//                                lastCharIsSpace = checkIfLastCharIsSpace(step.htmlInstructions, pos);
+//                                isBold = false;
+//                                boldStart = 0;
+//                            } else {
+//                                pos = matcher.end();
+//                            }
+//                        }
+//
+//                        if (pos < step.htmlInstructions.length()) {
+//                            if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
+//                                instructions.add(new Text(" "));
+//                            }
+//                            instructions.add(new Text(step.htmlInstructions.substring(pos)));
+//                        }
+//
+//                        cell.add(instructions);
+//                        cell.setBorder(Border.NO_BORDER);
+//                        routeTable.addCell(cell);
+//
+//                        cell = new Cell();
+//                        cell.add(new Paragraph(step.distance.humanReadable)
+//                                .setHorizontalAlignment(HorizontalAlignment.RIGHT)
+//                        );
+//                        cell.setBorder(Border.NO_BORDER);
+//                        cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+//                        routeTable.addCell(cell);
+//                    }
+//
+//                }
+//
+//                document.add(routeTable);
+//            }
 
             document.close();
             pdfDocument.close();
