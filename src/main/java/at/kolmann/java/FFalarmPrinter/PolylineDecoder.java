@@ -25,7 +25,7 @@ public class PolylineDecoder {
      * @return
      */
     public List<Point> decode(String encoded, double precision) {
-        List<Point> track = new ArrayList<Point>();
+        List<Point> track = new ArrayList<>();
         int index = 0;
         int lat = 0, lng = 0;
 
