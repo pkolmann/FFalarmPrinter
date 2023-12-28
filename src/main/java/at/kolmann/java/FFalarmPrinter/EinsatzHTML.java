@@ -36,7 +36,7 @@ public class EinsatzHTML {
             return;
         }
 
-        if (templatePath.toLowerCase().equals("none")) {
+        if (templatePath.equalsIgnoreCase("none")) {
             return;
         }
 
@@ -124,7 +124,7 @@ public class EinsatzHTML {
             info.append("</div>\n");
         }
 
-        if (einsatz.has("Melder") && !einsatz.getString("Melder").equals("")) {
+        if (einsatz.has("Melder") && !einsatz.getString("Melder").isEmpty()) {
             info.append("<div class=\"zeile\" id=\"einsatz-melder\">\n");
             info.append("  <div class=\"links\">\n");
             info.append("    Melder:\n");
@@ -134,15 +134,15 @@ public class EinsatzHTML {
             StringBuilder melder = new StringBuilder();
             melder.append(einsatz.getString("Melder")
                     .replaceAll("\n", "<br />" + System.lineSeparator()));
-            if (einsatz.has("MelderTelefon") && !einsatz.getString("MelderTelefon").equals("")) {
+            if (einsatz.has("MelderTelefon") && !einsatz.getString("MelderTelefon").isEmpty()) {
                 melder.append(" (").append(einsatz.getString("MelderTelefon")).append(")");
             }
-            info.append("    ").append(melder.toString()).append("<br />\n");
+            info.append("    ").append(melder).append("<br />\n");
             info.append("  </div>\n");
             info.append("</div>\n");
         }
 
-        if (einsatz.has("Bemerkung") && !einsatz.getString("Bemerkung").equals("")) {
+        if (einsatz.has("Bemerkung") && !einsatz.getString("Bemerkung").isEmpty()) {
             info.append("<div class=\"zeile\" id=\"einsatz-bemerkung\">\n");
             info.append("  <div class=\"links\">\n");
             info.append("    Bemerkung:\n");
@@ -167,7 +167,7 @@ public class EinsatzHTML {
             String today = String.format(("%tY-%<tm-%<tdT"), myCal);
             dispoList.append("<ul>\n");
 
-            Boolean hasActiveFF = false;
+            boolean hasActiveFF = false;
             for (int i = 0; i < disponierteFF.length(); i++) {
                 JSONObject currentDispo = disponierteFF.getJSONObject(i);
                 if (!currentDispo.has("EinTime")) {
@@ -217,7 +217,7 @@ public class EinsatzHTML {
                 dispoList.append("</li>\n");
             }
             dispoList.append("</ul>\n");
-            info.append("    ").append(dispoList.toString());
+            info.append("    ").append(dispoList);
             info.append("  </div>\n");
             info.append("</div>\n");
         }

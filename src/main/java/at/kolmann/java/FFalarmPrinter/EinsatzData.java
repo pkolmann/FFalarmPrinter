@@ -34,12 +34,12 @@ public class EinsatzData {
         }
         lastEinsatzStore.setLastEinsatzHash(einsatzJSONHashCode);
 
-        if (einsatzData.length() > 0) {
+        if (!einsatzData.isEmpty()) {
             // Print current date for logile
             System.out.printf("%tY-%<tm-%<td %<tH:%<tM:%<tS%n", myCal);
         }
 
-        if (savePath != null && einsatzData.length() > 0) {
+        if (savePath != null && !einsatzData.isEmpty()) {
             savePath += File.separator + yearString;
             File savePathFile = new File(savePath);
             if (!savePathFile.isAbsolute()) {
@@ -49,7 +49,7 @@ public class EinsatzData {
 
             if (!savePathFile.exists()) {
                 if (!savePathFile.mkdirs()) {
-                    System.out.println("Failed to create "+savePathFile.toString());
+                    System.out.println("Failed to create "+ savePathFile);
                 }
             }
 
@@ -83,7 +83,7 @@ public class EinsatzData {
         // generate new archiv.html page
         archivePageGenerator.generate();
 
-        if (einsatzData.length() == 0) {
+        if (einsatzData.isEmpty()) {
             lastEinsatzStore.clear();
         }
 

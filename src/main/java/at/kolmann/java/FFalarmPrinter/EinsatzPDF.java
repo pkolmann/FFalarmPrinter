@@ -156,7 +156,7 @@ public class EinsatzPDF {
 
                 cell = new Cell();
                 Paragraph melder = new Paragraph(einsatz.getString("Melder"));
-                if (einsatz.has("MelderTelefon") && !einsatz.getString("MelderTelefon").equals("")) {
+                if (einsatz.has("MelderTelefon") && !einsatz.getString("MelderTelefon").isEmpty()) {
                     melder.add(" (" + einsatz.getString("MelderTelefon") + ")");
                 }
                 cell.add(melder);

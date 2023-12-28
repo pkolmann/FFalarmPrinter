@@ -221,6 +221,7 @@ public class Einsatz {
                     einsatzMap
             );
 
+            assert routerResult != null;
             einsatzHTML.saveEinsatz(
                     savePath + File.separator + alarmPath + ".html",
                     einsatzID,

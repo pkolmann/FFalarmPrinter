@@ -13,21 +13,20 @@ import java.util.ArrayList;
 
 public class EinsatzRouter {
     private final Config config;
-    private byte[] mapsImage;
     private JSONObject result = null;
     private JSONObject route = null;
 
     private Double einsatzLat = null;
     private Double einsatzLng = null;
 
-    private StaticMapGenerator staticMapGenerator;
+    private final StaticMapGenerator staticMapGenerator;
 
     private static final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
-    public EinsatzRouter(Config config) throws IOException {
+    public EinsatzRouter(Config config) {
         this.config = config;
         staticMapGenerator = new OpenStaticMapGenerator(config);
     }
@@ -69,7 +68,7 @@ public class EinsatzRouter {
             uri.append(this.einsatzLat);
             uri.append("?steps=true&overview=full");
 
-            System.out.println(uri.toString());
+            System.out.println(uri);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()
@@ -99,7 +98,7 @@ public class EinsatzRouter {
             throw new IOException("RouteJSON has no 'routes' key!");
         }
 
-        if (result.getJSONArray("routes").length() < 1) {
+        if (result.getJSONArray("routes").isEmpty()) {
             throw new IOException("RouteJSON has less then 1 routes!");
         }
 
