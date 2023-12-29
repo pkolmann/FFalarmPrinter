@@ -19,6 +19,10 @@ public class EinsatzRouter {
     private Double einsatzLat = null;
     private Double einsatzLng = null;
 
+    private final JSONObject routeDetails = null;
+
+    private final OsrmTextInstructions osrmTextInstructions;
+
     private final StaticMapGenerator staticMapGenerator;
 
     private static final HttpClient httpClient = HttpClient.newBuilder()
@@ -29,6 +33,15 @@ public class EinsatzRouter {
     public EinsatzRouter(Config config) {
         this.config = config;
         staticMapGenerator = new OpenStaticMapGenerator(config);
+
+        if (this.config.has("osrm_translation")) {
+            this.osrmTextInstructions = new OsrmTextInstructions(this.config.getString("osrm_translation"));
+        } else {
+            this.osrmTextInstructions = new OsrmTextInstructions();
+        }
+
+        System.out.println(this.osrmTextInstructions.ordinalize(5));
+        System.out.println(this.osrmTextInstructions.directionFromDegree(155.0));
     }
 
     public void shutdown() {}
@@ -69,6 +82,13 @@ public class EinsatzRouter {
             uri.append("?steps=true&overview=full");
 
             System.out.println(uri);
+            System.out.println(
+                    "https://map.project-osrm.org/?z=14&center=16.188346%2C47.706954" +
+                    "&loc="+config.getDouble("FeuerwehrhausLocationLat")+"%2C"+config.getDouble("FeuerwehrhausLocationLon") +
+                    "&loc="+config.getDouble("FeuerwehrhausLocationWaypointLat")+"%2C"+config.getDouble("FeuerwehrhausLocationWaypointLon") +
+                    "&loc="+this.einsatzLat+"%2C"+this.einsatzLng +
+                    "&hl=en&alt=0&srv=0"
+            );
 
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()
@@ -103,6 +123,15 @@ public class EinsatzRouter {
         }
 
         route = result.getJSONArray("routes").getJSONObject(0);
+        this.processRouteDetails(route);
+    }
+
+    public JSONObject getRouteDetails() {
+        return routeDetails;
+    }
+
+    private void processRouteDetails(JSONObject route) {
+
     }
 
 
