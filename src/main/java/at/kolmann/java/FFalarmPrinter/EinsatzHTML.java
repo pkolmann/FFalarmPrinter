@@ -1,6 +1,5 @@
 package at.kolmann.java.FFalarmPrinter;
 
-import de.westnordost.osmapi.map.data.Node;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -11,9 +10,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Map;
 import java.util.stream.Stream;
 
 public class EinsatzHTML {
@@ -27,7 +24,10 @@ public class EinsatzHTML {
             JSONObject einsatz,
             JSONArray disponierteFF,
             String einsatzAdresse,
-            ArrayList<Node> hydrants)
+            Double einsatzLong,
+            Double einsatzLat,
+            String routeJson,
+            String hydrantsJson)
     {
         String templatePath = config.getString("htmlTemplateFile");
 
@@ -36,7 +36,7 @@ public class EinsatzHTML {
             return;
         }
 
-        if (templatePath.toLowerCase().equals("none")) {
+        if (templatePath.equalsIgnoreCase("none")) {
             return;
         }
 
@@ -62,16 +62,6 @@ public class EinsatzHTML {
         }
 
         String template = templateSB.toString();
-
-        String APIkey = config.getString("googleMapsApiKeyWeb");
-        if (APIkey == null) {
-            APIkey = config.getString("googleMapsApiKey");
-        }
-
-        if (APIkey == null) {
-            System.out.println("No Google API Key found!");
-            return;
-        }
 
         StringBuilder info = new StringBuilder();
         info.append("<div class=\"zeile\" id=\"einsatz-id\">\n");
@@ -134,7 +124,7 @@ public class EinsatzHTML {
             info.append("</div>\n");
         }
 
-        if (einsatz.has("Melder") && !einsatz.getString("Melder").equals("")) {
+        if (einsatz.has("Melder") && !einsatz.getString("Melder").isEmpty()) {
             info.append("<div class=\"zeile\" id=\"einsatz-melder\">\n");
             info.append("  <div class=\"links\">\n");
             info.append("    Melder:\n");
@@ -144,15 +134,15 @@ public class EinsatzHTML {
             StringBuilder melder = new StringBuilder();
             melder.append(einsatz.getString("Melder")
                     .replaceAll("\n", "<br />" + System.lineSeparator()));
-            if (einsatz.has("MelderTelefon") && !einsatz.getString("MelderTelefon").equals("")) {
+            if (einsatz.has("MelderTelefon") && !einsatz.getString("MelderTelefon").isEmpty()) {
                 melder.append(" (").append(einsatz.getString("MelderTelefon")).append(")");
             }
-            info.append("    ").append(melder.toString()).append("<br />\n");
+            info.append("    ").append(melder).append("<br />\n");
             info.append("  </div>\n");
             info.append("</div>\n");
         }
 
-        if (einsatz.has("Bemerkung") && !einsatz.getString("Bemerkung").equals("")) {
+        if (einsatz.has("Bemerkung") && !einsatz.getString("Bemerkung").isEmpty()) {
             info.append("<div class=\"zeile\" id=\"einsatz-bemerkung\">\n");
             info.append("  <div class=\"links\">\n");
             info.append("    Bemerkung:\n");
@@ -177,9 +167,17 @@ public class EinsatzHTML {
             String today = String.format(("%tY-%<tm-%<tdT"), myCal);
             dispoList.append("<ul>\n");
 
+            boolean hasActiveFF = false;
             for (int i = 0; i < disponierteFF.length(); i++) {
                 JSONObject currentDispo = disponierteFF.getJSONObject(i);
-                if (currentDispo.has("EinTime")) {
+                if (!currentDispo.has("EinTime")) {
+                    // Ignore already returned ones
+                    hasActiveFF = true;
+                }
+            }
+            for (int i = 0; i < disponierteFF.length(); i++) {
+                JSONObject currentDispo = disponierteFF.getJSONObject(i);
+                if (hasActiveFF && currentDispo.has("EinTime")) {
                     // Ignore already returned ones
                     continue;
                 }
@@ -219,7 +217,7 @@ public class EinsatzHTML {
                 dispoList.append("</li>\n");
             }
             dispoList.append("</ul>\n");
-            info.append("    ").append(dispoList.toString());
+            info.append("    ").append(dispoList);
             info.append("  </div>\n");
             info.append("</div>\n");
         }
@@ -250,125 +248,13 @@ public class EinsatzHTML {
             feuerwehrhausLocationLon = "16.0";
         }
 
-        template = template.replaceAll("@@APIKEY@@", APIkey);
         template = template.replaceAll("@@STARTLAT@@", feuerwehrhausLocationLat);
         template = template.replaceAll("@@STARTLONG@@", feuerwehrhausLocationLon);
-        template = template.replaceAll("@@ALARMADRESSE@@", einsatzAdresse
-                .replaceAll(System.lineSeparator(), ", "));
+        template = template.replaceAll("@@ENDLAT@@", einsatzLat.toString());
+        template = template.replaceAll("@@ENDLONG@@", einsatzLong.toString());
+        template = template.replaceAll("@@ROUTEJSON@@", escape(routeJson));
+        template = template.replaceAll("@@HYDRANTSJSON@@", escape(hydrantsJson));
         template = template.replaceAll("@@INPUTLISTE@@", info.toString());
-
-        // add hydrants as markers...
-        StringBuilder hydrantMarkers = new StringBuilder();
-        int markerId = 0;
-        if (hydrants != null) {
-            hydrantMarkers.append("                        const infowindow = new google.maps.InfoWindow();\n");
-
-            for (Node hydrant : hydrants) {
-                if (hydrant.isDeleted()) {
-                    continue;
-                }
-
-                StringBuilder hydrantText = new StringBuilder();
-                Map<String, String> tags = hydrant.getTags();
-                if (tags.containsKey("emergency") && tags.get("emergency").equalsIgnoreCase("suction_point")) {
-                    hydrantText.append("Ansaugplatz (für Pumpe)<br />");
-                } else {
-                    boolean couplingTextStarted = false;
-                    if (tags.containsKey("fire_hydrant:coupling_type")) {
-                        hydrantText.append("Kupplung: ").append(tags.get("fire_hydrant:coupling_type"));
-                        couplingTextStarted = true;
-                    }
-                    if (tags.containsKey("fire_hydrant:couplings")) {
-                        if (!couplingTextStarted) {
-                            hydrantText.append("Kupplung: ");
-                            couplingTextStarted = true;
-                        } else {
-                            hydrantText.append(", ");
-                        }
-                        hydrantText.append(tags.get("fire_hydrant:couplings"));
-                    }
-                    if (couplingTextStarted) {
-                        hydrantText.append("<br />");
-                    }
-                    couplingTextStarted = false;
-                    if (tags.containsKey("couplings:type")) {
-                        hydrantText.append("Kupplung: ").append(tags.get("couplings:type"));
-                        couplingTextStarted = true;
-                    }
-                    if (tags.containsKey("couplings:diameters")) {
-                        if (!couplingTextStarted) {
-                            hydrantText.append("Kupplung: ");
-                            couplingTextStarted = true;
-                        } else {
-                            hydrantText.append(", ");
-                        }
-                        hydrantText.append(tags.get("couplings:diameters"));
-                    }
-                    if (couplingTextStarted) {
-                        hydrantText.append("<br />");
-                    }
-
-                    if (tags.containsKey("fire_hydrant:type")) {
-                        switch (tags.get("fire_hydrant:type").toLowerCase()) {
-                            case "pillar":
-                                hydrantText.append("Art: Überflur-Hydrant<br />");
-                                break;
-                            case "underground":
-                                hydrantText.append("Art: Unterflur-Hydrant<br />");
-                                break;
-                            case "wall":
-                                hydrantText.append("Art: Wandanschluss<br />");
-                                break;
-                            case "pipe":
-                                hydrantText.append("Art: Steigleitung<br />");
-                                break;
-                        }
-                    }
-                }
-
-//            for (Map.Entry<String, String> entry : tags.entrySet()) {
-//                String key = entry.getKey();
-//                String value = entry.getValue();
-//                System.out.println("Key: " + key + ", Value: " + value);
-//
-//            }
-//
-//            System.out.println(hydrantText.toString());
-//            System.out.println("--------");
-//            System.out.println();
-
-                hydrantMarkers.append("            const marker");
-                hydrantMarkers.append(markerId);
-                hydrantMarkers.append(" = new google.maps.Marker({\n");
-                hydrantMarkers.append("                position: {lat: ");
-                hydrantMarkers.append(hydrant.getPosition().getLatitude());
-                hydrantMarkers.append(", lng: ");
-                hydrantMarkers.append(hydrant.getPosition().getLongitude());
-                hydrantMarkers.append("},\n");
-                hydrantMarkers.append("                map: map,\n");
-                hydrantMarkers.append("                icon: {\n");
-                hydrantMarkers.append("                    url: \"http://maps.google.com/mapfiles/ms/icons/blue-dot.png\"\n");
-                hydrantMarkers.append("                }\n");
-                hydrantMarkers.append("            });\n");
-                if (hydrantText.length() > 0) {
-                    hydrantMarkers.append("            google.maps.event.addListener(marker");
-                    hydrantMarkers.append(markerId);
-                    hydrantMarkers.append(", 'click', function() {\n");
-                    hydrantMarkers.append("                infowindow.setContent(\"");
-                    hydrantMarkers.append(hydrantText.toString());
-                    hydrantMarkers.append("\");\n");
-                    hydrantMarkers.append("                infowindow.open(map, marker");
-                    hydrantMarkers.append(markerId);
-                    hydrantMarkers.append(");\n");
-                    hydrantMarkers.append("            });\n");
-                    hydrantMarkers.append("\n");
-                }
-                hydrantMarkers.append("            \n");
-                markerId++;
-
-            }
-        }
-        template = template.replaceAll("@@MARKERS@@", hydrantMarkers.toString());
 
         System.out.println("Saving HTML to " + fileName);
         File file = new File(fileName);
@@ -381,5 +267,19 @@ public class EinsatzHTML {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    // https://stackoverflow.com/a/50522874
+    private String escape(String raw) {
+        String escaped = raw;
+        escaped = escaped.replace("\\", "\\\\");
+        escaped = escaped.replace("\"", "\\\"");
+        escaped = escaped.replace("\b", "\\b");
+        escaped = escaped.replace("\f", "\\f");
+        escaped = escaped.replace("\n", "\\n");
+        escaped = escaped.replace("\r", "\\r");
+        escaped = escaped.replace("\t", "\\t");
+        // TODO: escape other non-printing characters using uXXXX notation
+        return escaped;
     }
 }

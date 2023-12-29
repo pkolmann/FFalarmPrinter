@@ -1,9 +1,7 @@
 package at.kolmann.java.FFalarmPrinter;
 
-import com.google.maps.GeoApiContext;
-import com.google.maps.model.DirectionsRoute;
-import com.google.maps.model.LatLng;
 import de.westnordost.osmapi.map.data.Node;
+import org.json.JSONObject;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -15,7 +13,9 @@ import java.util.ArrayList;
 
 public class OpenStaticMapGenerator implements StaticMapGenerator {
     private final Config config;
-    private final GeoApiContext context;
+
+    private final PolylineDecoder polylineDecoder = new PolylineDecoder();
+
     private final String[] tileServer = {
             "https://maps.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
             "https://maps1.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
@@ -29,34 +29,37 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
 
     private byte[] mapsImage = null;
 
-    public OpenStaticMapGenerator(
-            Config config,
-            GeoApiContext context
-    ) {
+    public OpenStaticMapGenerator(Config config) {
         this.config = config;
-        this.context = context;
     }
 
     private void processMapImage(
-            DirectionsRoute route,
-            LatLng einsatzLatLng,
+            JSONObject route,
+            Double einsatzLng,
+            Double einsatzLat,
             ArrayList<Node> hydrants
     ) {
         if (route != null) {
             try {
                 int mapZoom = 13;
-                if (route.legs[0].distance.inMeters < 5000) {
+
+                long totalDistance = 0;
+                if (route.has("distance")) {
+                    totalDistance = route.getLong("distance");
+                }
+
+                if (totalDistance > 0 && totalDistance < 5000) {
                     mapZoom = 16;
-                } else if (route.legs[0].distance.inMeters < 10000) {
+                } else if (totalDistance < 10000) {
                     mapZoom = 15;
-                } else if (route.legs[0].distance.inMeters < 20000) {
+                } else if (totalDistance < 20000) {
                     mapZoom = 14;
                 }
 
                 // OSM / Basemap tiles
-                int xtile = (int)Math.floor( (einsatzLatLng.lng + 180) / 360 * (1<<mapZoom) ) ;
-                int ytile = (int)Math.floor( (1 - Math.log(Math.tan(Math.toRadians(einsatzLatLng.lat)) + 1 /
-                        Math.cos(Math.toRadians(einsatzLatLng.lat))) / Math.PI) / 2 * (1<<mapZoom) ) ;
+                int xtile = (int)Math.floor( (einsatzLng + 180) / 360 * (1<<mapZoom) ) ;
+                int ytile = (int)Math.floor( (1 - Math.log(Math.tan(Math.toRadians(einsatzLat)) + 1 /
+                        Math.cos(Math.toRadians(einsatzLat))) / Math.PI) / 2 * (1<<mapZoom) ) ;
                 if (xtile < 0)
                     xtile=0;
                 if (xtile >= (1<<mapZoom))
@@ -109,22 +112,24 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
 
                 int lastX = -1;
                 int lastY = -1;
-                for (LatLng routePoint: route.overviewPolyline.decodePath()) {
-                    if (routePoint.lat > north || routePoint.lat < south) continue;
-                    if (routePoint.lng > east || routePoint.lng < west) continue;
+                if (route.has("geometry")) {
+                    for (Point routePoint: polylineDecoder.decode(route.getString("geometry"))) {
+                        if (routePoint.getLat() > north || routePoint.getLat() < south) continue;
+                        if (routePoint.getLng() > east || routePoint.getLng() < west) continue;
 
-                    int pointX = coord2pixel(routePoint.lng - west, yPixel);
-                    int pointY = coord2pixel(north - routePoint.lat, xPixel);
-                    if (lastX < 0 || lastY < 0) {
+                        int pointX = coord2pixel(routePoint.getLng() - west, yPixel);
+                        int pointY = coord2pixel(north - routePoint.getLat(), xPixel);
+                        if (lastX < 0 || lastY < 0) {
+                            lastX = pointX;
+                            lastY = pointY;
+                            continue;
+                        }
+                        baseMapGraphics.setColor(Color.BLUE);
+                        baseMapGraphics.setStroke(new BasicStroke(5));
+                        baseMapGraphics.drawLine(lastX, lastY, pointX, pointY);
                         lastX = pointX;
                         lastY = pointY;
-                        continue;
                     }
-                    baseMapGraphics.setColor(Color.BLUE);
-                    baseMapGraphics.setStroke(new BasicStroke(5));
-                    baseMapGraphics.drawLine(lastX, lastY, pointX, pointY);
-                    lastX = pointX;
-                    lastY = pointY;
                 }
 
                 // Feuerwehrhaus im Image
@@ -143,8 +148,8 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                 }
 
                 // Einsatzort im Image
-                int einsatzX = coord2pixel(einsatzLatLng.lng - west, yPixel);
-                int einsatzY = coord2pixel(north - einsatzLatLng.lat,  xPixel);
+                int einsatzX = coord2pixel(einsatzLng - west, yPixel);
+                int einsatzY = coord2pixel(north - einsatzLat,  xPixel);
 
                 BufferedImage redDot = mapMarker(Color.RED);
                 einsatzX = einsatzX - (int)Math.floor((double)redDot.getWidth() / 2);
@@ -155,6 +160,7 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                 // add hydrants as markers...
                 BufferedImage blueDot = mapMarkerSmall(Color.BLUE);
                 if (hydrants != null) {
+                    System.out.println("Adding hydrants...");
                     for (Node hydrant : hydrants) {
                         if (hydrant.isDeleted()) {
                             continue;
@@ -165,6 +171,8 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                         hydrantY = hydrantY - blueDot.getHeight();
                         baseMapGraphics.drawImage(blueDot, hydrantX, hydrantY, null);
                     }
+                } else {
+                    System.out.println("No Hydrants found!");
                 }
 
                 // Add scale to bottom
@@ -196,19 +204,19 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
 
             } catch (Exception e) {
                 e.printStackTrace();
-                context.shutdown();
             }
         }
     }
 
     @Override
     public byte[] getMapsImage(
-            DirectionsRoute route,
-            LatLng einsatzLatLng,
+            JSONObject route,
+            Double einsatzLng,
+            Double einsatzLat,
             ArrayList<Node> hydrants
     ) {
         if (mapsImage == null) {
-            processMapImage(route, einsatzLatLng, hydrants);
+            processMapImage(route, einsatzLng, einsatzLat, hydrants);
         }
         return mapsImage;
     }
