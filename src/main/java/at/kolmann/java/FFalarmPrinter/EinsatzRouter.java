@@ -1,6 +1,7 @@
 package at.kolmann.java.FFalarmPrinter;
 
 import de.westnordost.osmapi.map.data.Node;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -131,9 +132,38 @@ public class EinsatzRouter {
     }
 
     private void processRouteDetails(JSONObject route) {
+        if (!route.has("legs")) {
+            return;
+        }
 
+        JSONArray legs = route.getJSONArray("legs");
+        for (int i = 0; i < legs.length(); i++) {
+            JSONObject leg = (JSONObject) legs.get(i);
+            if (!leg.has("steps")) {
+                continue;
+            }
+            JSONArray steps = leg.getJSONArray("steps");
+            for (int j = 0; j < steps.length(); j++) {
+                JSONObject step = (JSONObject) steps.get(j);
+                System.out.println(step);
+
+                if (
+                        !step.has("mode")
+                        || !step.has("distance")
+                        || !step.has("maneuver")
+                ) {
+                    continue;
+                }
+
+                String mode = step.getString("mode");
+                double distance = step.getDouble("distance");
+
+                System.out.println(osrmTextInstructions.compile(step));
+            }
+            System.out.println("==============");
+            System.out.println("==============");
+        }
     }
-
 
     public byte[] getMapsImage(ArrayList<Node> hydrants) {
         if (einsatzLng == null || einsatzLat == null) {
