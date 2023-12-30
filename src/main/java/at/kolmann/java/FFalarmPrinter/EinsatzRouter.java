@@ -20,7 +20,7 @@ public class EinsatzRouter {
     private Double einsatzLat = null;
     private Double einsatzLng = null;
 
-    private final JSONObject routeDetails = null;
+    private ArrayList<StepTranslation> routeDetails = null;
 
     private final OsrmTextInstructions osrmTextInstructions;
 
@@ -127,8 +127,8 @@ public class EinsatzRouter {
         this.processRouteDetails(route);
     }
 
-    public JSONObject getRouteDetails() {
-        return routeDetails;
+    public ArrayList<StepTranslation> getRouteDetails() {
+        return this.routeDetails;
     }
 
     private void processRouteDetails(JSONObject route) {
@@ -136,6 +136,7 @@ public class EinsatzRouter {
             return;
         }
 
+        ArrayList<StepTranslation> translatedSteps = new ArrayList<>();
         JSONArray legs = route.getJSONArray("legs");
         for (int i = 0; i < legs.length(); i++) {
             JSONObject leg = (JSONObject) legs.get(i);
@@ -144,12 +145,26 @@ public class EinsatzRouter {
             }
             JSONArray steps = leg.getJSONArray("steps");
             for (int j = 0; j < steps.length(); j++) {
-                JSONObject step = (JSONObject) steps.get(j);
-                System.out.println(osrmTextInstructions.compile(step));
+                // If there is a Waypoint on the way out of the Feuerwehrhaus
+                // ignore last instruction of first leg
+                // and first instruction of second leg
+                if (
+                        config.has("FeuerwehrhausLocationWaypointLon")
+                                && config.has("FeuerwehrhausLocationWaypointLat")
+                                && config.get("FeuerwehrhausLocationWaypointLon") != null
+                                && config.get("FeuerwehrhausLocationWaypointLat") != null
+                ) {
+                    // Ignore last step of first leg
+                    if (i == 0 && j == (steps.length() - 1)) continue;
+                    // Ignore first step of second leg
+                    if (i == 1 && j == 0) continue;
+                }
+                translatedSteps.add(osrmTextInstructions.compile((JSONObject) steps.get(j)));
             }
-            System.out.println("==============");
-            System.out.println("==============");
         }
+
+        this.routeDetails = translatedSteps;
+        System.out.println(this.routeDetails);
     }
 
     public byte[] getMapsImage(ArrayList<Node> hydrants) {

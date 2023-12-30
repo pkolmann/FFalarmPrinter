@@ -151,7 +151,7 @@ public class OsrmTextInstructions {
         return config.toString();
     }
 
-    public String compile(JSONObject step) {
+    public StepTranslation compile(JSONObject step) {
         if (!step.has("maneuver")) {
             throw new RuntimeException("No step maneuver provided.");
         }
@@ -341,6 +341,10 @@ public class OsrmTextInstructions {
 
         instruction = capitalizeFirstLetter(instruction);
 
-        return instruction;
+        return new StepTranslation(
+                step.getDouble("distance"),
+                step.getDouble("duration"),
+                instruction
+        );
     }
 }
