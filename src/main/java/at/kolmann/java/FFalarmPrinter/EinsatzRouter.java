@@ -145,19 +145,6 @@ public class EinsatzRouter {
             JSONArray steps = leg.getJSONArray("steps");
             for (int j = 0; j < steps.length(); j++) {
                 JSONObject step = (JSONObject) steps.get(j);
-                System.out.println(step);
-
-                if (
-                        !step.has("mode")
-                        || !step.has("distance")
-                        || !step.has("maneuver")
-                ) {
-                    continue;
-                }
-
-                String mode = step.getString("mode");
-                double distance = step.getDouble("distance");
-
                 System.out.println(osrmTextInstructions.compile(step));
             }
             System.out.println("==============");

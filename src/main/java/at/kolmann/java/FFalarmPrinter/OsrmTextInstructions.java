@@ -121,9 +121,9 @@ public class OsrmTextInstructions {
     public String laneConfig(JSONObject step) {
         if (
             !step.has("intersections")
-            || step.getJSONArray("intersections").length() == 0
+            || step.getJSONArray("intersections").isEmpty()
             || !((JSONObject) step.getJSONArray("intersections").get(0)).has("lanes")
-            || ((JSONObject) step.getJSONArray("intersections").get(0)).getJSONArray("lanes").length() == 0
+            || ((JSONObject) step.getJSONArray("intersections").get(0)).getJSONArray("lanes").isEmpty()
         ) {
             throw new RuntimeException("No lanes object");
         }
@@ -159,16 +159,16 @@ public class OsrmTextInstructions {
         if (!maneuver.has("type")) {
             throw new RuntimeException("No maneuver type provided.");
         }
-        if (!maneuver.has("mode")) {
-            throw new RuntimeException("No maneuver mode provided.");
-        }
 
         String type = maneuver.getString("type");
         String modifier = "";
         if (maneuver.has("modifier")) {
             modifier = maneuver.getString("modifier");
         }
-        String mode = maneuver.getString("mode");
+        String mode = null;
+        if (maneuver.has("mode")) {
+            mode = maneuver.getString("mode");
+        }
 
         if (type.isEmpty()) {
             throw new RuntimeException("Missing step maneuver type.");
@@ -220,25 +220,25 @@ public class OsrmTextInstructions {
             case "rotary":
             case "roundabout":
                 if (
-                    this.langObject.has("name")
-                    && !this.langObject.getString("name").isEmpty()
-                    && this.langObject.has("maneuver")
-                    && this.langObject.getJSONObject("maneuver").has("exit")
-                    && instructionObject.has("name_exit")
+                        this.langObject.has("name")
+                                && !this.langObject.getString("name").isEmpty()
+                                && this.langObject.has("maneuver")
+                                && this.langObject.getJSONObject("maneuver").has("exit")
+                                && instructionObject.has("name_exit")
 //                    && this.langObject.getJSONObject("maneuver").getInt("exit")
 //                        !TextUtils.isEmpty(step.getRotaryName()) && step.getManeuver().getExit() != null && instructionObject.getAsJsonObject("name_exit") != null
                 ) {
                     instructionObject = instructionObject.getJSONObject("name_exit");
                 } else if (
-                    this.langObject.has("name")
-                    && instructionObject.has("name")
+                        this.langObject.has("name")
+                                && instructionObject.has("name")
 //                    step.getRotaryName() != null && instructionObject.getAsJsonObject("name") != null
                 ) {
                     instructionObject = instructionObject.getJSONObject("name");
                 } else if (
-                    this.langObject.has("maneuver")
-                    && this.langObject.getJSONObject("maneuver").has("exit")
-                    && instructionObject.has("exit")
+                        this.langObject.has("maneuver")
+                                && this.langObject.getJSONObject("maneuver").has("exit")
+                                && instructionObject.has("exit")
 //                    step.getManeuver().getExit() != null && instructionObject.getAsJsonObject("exit") != null
                 ) {
                     instructionObject = instructionObject.getJSONObject("exit");
@@ -252,8 +252,14 @@ public class OsrmTextInstructions {
 
         // Decide way_name with special handling for name and ref
         String wayName;
-        String name = step.has("name") && step.getString("name").isEmpty() ? "" : step.getString("name");
-        String ref = step.has("ref") && step.getString("ref").isEmpty() ? "" : step.getString("ref").split(";")[0];
+        String name = "";
+        if (step.has("name") && !step.getString("name").isEmpty()) {
+            name = step.getString("name");
+        }
+        String ref = "";
+        if (step.has("ref") && !step.getString("ref").isEmpty()) {
+            ref = step.getString("ref").split(";")[0];
+        }
 
         // Remove hacks from Mapbox Directions mixing ref into name
         if (step.has("ref") && name.equals(step.getString("ref"))) {
@@ -295,20 +301,16 @@ public class OsrmTextInstructions {
             instruction = instructionObject.getString("default");
         }
 
-//        if (getTokenizedInstructionHook() != null) {
-//            instruction = getTokenizedInstructionHook().change(instruction);
-//        }
-
         // Replace tokens
         // NOOP if they don't exist
         String nthWaypoint = ""; // TODO, add correct waypoint counting
-        JSONObject modifierValue = null;
+        String modifierValue = null;
         if (
             this.langObject.has("constants")
             && this.langObject.getJSONObject("constants").has("modifier")
             && this.langObject.getJSONObject("constants").getJSONObject("modifier").has(modifier)
         ) {
-            modifierValue = this.langObject.getJSONObject("constants").getJSONObject("modifier").getJSONObject(modifier);
+            modifierValue = this.langObject.getJSONObject("constants").getJSONObject("modifier").getString(modifier);
         }
         instruction = instruction
                 .replace("{way_name}", wayName)
@@ -317,8 +319,8 @@ public class OsrmTextInstructions {
                         : ""
                 )
                 .replace("{exit_number}", step.has("maneuver") && step.getJSONObject("maneuver").has("exit")
-                        ? ordinalize(1)
-                        : ordinalize(step.getJSONObject("maneuver").getInt("exit"))
+                        ? ordinalize(step.getJSONObject("maneuver").getInt("exit"))
+                        : ordinalize(1)
                 )
                 .replace("{rotary_name}", step.has("name") && !step.getString("name").isEmpty()
                         ? ""
@@ -330,16 +332,14 @@ public class OsrmTextInstructions {
                 )
                 .replace("{modifier}", modifierValue == null
                         ? ""
-                        : "{modifier}: " + modifierValue.toString()
+                        : modifierValue
                 )
                 .replace("{direction}", directionFromDegree(step.getJSONObject("maneuver").getDouble("bearing_after")))
                 .replace("{nth}", nthWaypoint)
                 .replaceAll("\\s+", " ") // remove excess spaces
         ;
 
-//        if (getRootObject().getAsJsonObject("meta").getAsJsonPrimitive("capitalizeFirstLetter").getAsBoolean()) {
-//            instruction = capitalizeFirstLetter(instruction);
-//        }
+        instruction = capitalizeFirstLetter(instruction);
 
         return instruction;
     }
