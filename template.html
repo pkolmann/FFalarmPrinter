@@ -53,6 +53,7 @@
             const endLong = @@ENDLONG@@;
             const routeJson = @@ROUTEJSON@@;
             const hydrantsJson = @@HYDRANTSJSON@@;
+            const routeSteps = @@ROUTESTEPS@@;
 
             let mapZoom = 13;
             if (
@@ -87,8 +88,18 @@
                     anfahrt.innerHTML += "1 Minute";
                 }
 
-                // TODO add route
-                // directionsDisplay.setDirections(response);
+                if (routeSteps !== null) {
+                    let routeDescription = "<h2>Routenbeschreibung</h2><ul>";
+                    for (let i = 0; i < routeSteps.length; i++) {
+                        routeDescription += "<li>" + routeSteps[i].text;
+                        if (i < (routeSteps.length - 1)) {
+                            routeDescription += " (" + routeSteps[i].distance + "m)";
+                        }
+                        routeDescription += "</li>";
+                    }
+                    routeDescription += "</ul>";
+                    document.getElementById("directionsPanel").innerHTML = routeDescription;
+                }
 
                 if (totalDistance >= 10000) {
                     document.getElementById("directionsPanel").style.display = "block";

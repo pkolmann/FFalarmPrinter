@@ -53,6 +53,7 @@
 
 #directionsPanel {
     display: none;
+    margin: 2%;
 }
 
 #div-generiert {

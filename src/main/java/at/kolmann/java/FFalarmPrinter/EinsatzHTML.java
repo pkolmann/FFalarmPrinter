@@ -27,7 +27,8 @@ public class EinsatzHTML {
             Double einsatzLong,
             Double einsatzLat,
             String routeJson,
-            String hydrantsJson)
+            String hydrantsJson,
+            String routeSteps)
     {
         String templatePath = config.getString("htmlTemplateFile");
 
@@ -255,6 +256,7 @@ public class EinsatzHTML {
         template = template.replaceAll("@@ROUTEJSON@@", escape(routeJson));
         template = template.replaceAll("@@HYDRANTSJSON@@", escape(hydrantsJson));
         template = template.replaceAll("@@INPUTLISTE@@", info.toString());
+        template = template.replaceAll("@@ROUTESTEPS@@", escape(routeSteps));
 
         System.out.println("Saving HTML to " + fileName);
         File file = new File(fileName);

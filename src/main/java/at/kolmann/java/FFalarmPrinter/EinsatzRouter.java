@@ -164,7 +164,6 @@ public class EinsatzRouter {
         }
 
         this.routeDetails = translatedSteps;
-        System.out.println(this.routeDetails);
     }
 
     public byte[] getMapsImage(ArrayList<Node> hydrants) {

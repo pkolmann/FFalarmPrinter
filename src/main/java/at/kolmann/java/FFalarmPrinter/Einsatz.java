@@ -231,7 +231,8 @@ public class Einsatz {
                     einsatzLng,
                     einsatzLat,
                     routerResult.toString(),
-                    hydrantsResult.toString()
+                    hydrantsResult.toString(),
+                    einsatzRouter.getRouteDetails().toString()
             );
 
             try {
