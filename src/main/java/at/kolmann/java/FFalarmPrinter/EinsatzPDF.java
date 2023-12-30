@@ -13,16 +13,14 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.*;
-import com.itextpdf.layout.property.HorizontalAlignment;
-import com.itextpdf.layout.property.TextAlignment;
-import com.itextpdf.layout.property.UnitValue;
-import com.itextpdf.layout.property.VerticalAlignment;
+import com.itextpdf.layout.property.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class EinsatzPDF {
@@ -38,6 +36,7 @@ public class EinsatzPDF {
             JSONArray disponierteFF,
             String einsatzAdresse,
             JSONObject route,
+            ArrayList<StepTranslation> routeSteps,
             byte[] einsatzMap)
     {
         try {
@@ -53,7 +52,11 @@ public class EinsatzPDF {
 
             Table headerTable = new Table(UnitValue.createPercentArray(new float[] {3, 1})).useAllAvailableWidth();
             Cell cell = new Cell();
-            cell.add(new Paragraph("FF Pitten Einsatzplan - " + einsatzID));
+            if (config.has("FeuerwehrName") && !config.getString("FeuerwehrName").isEmpty()) {
+                cell.add(new Paragraph(config.getString("FeuerwehrName") + " Einsatzplan"));
+            } else {
+                cell.add(new Paragraph("Einsatzplan"));
+            }
             cell.setFontSize(22);
             cell.setTextAlignment(TextAlignment.CENTER);
             cell.setBorder(Border.NO_BORDER);
@@ -323,80 +326,31 @@ public class EinsatzPDF {
                 document.add(mapImage);
             }
 
-//            if (totalDistance >= 10000) {
-//                document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-//                document.add(headerTable);
-//                document.add(new Paragraph(" "));
-//                document.add(new Paragraph(" "));
-//
-//                Table routeTable = new Table(UnitValue.createPercentArray(new float[] {5, 1})).useAllAvailableWidth();
-//
-//                for (DirectionsLeg routeLeg : route.legs) {
-//                    for (DirectionsStep step : routeLeg.steps) {
-//                        cell = new Cell();
-//                        Paragraph instructions = new Paragraph();
-//                        Pattern patter = Pattern.compile("(<[^>]+>)");
-//                        Matcher matcher = patter.matcher(step.htmlInstructions);
-//
-//                        int pos = 0;
-//                        boolean isBold = false;
-//                        boolean lastCharIsSpace = false;
-//                        int boldStart = 0;
-//                        while (matcher.find()) {
-//                            if (pos < matcher.start() && !isBold) {
-//                                if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
-//                                    instructions.add(new Text(" "));
-//                                }
-//                                instructions.add(new Text(step.htmlInstructions.substring(pos, matcher.start())));
-//                                pos = matcher.start();
-//                                lastCharIsSpace = checkIfLastCharIsSpace(step.htmlInstructions, pos);
-//                            }
-//
-//                            String marker = matcher.group();
-//                            if (marker.equals("<b>")) {
-//                                isBold = true;
-//                                boldStart = matcher.end();
-//                                pos = matcher.end();
-//                            } else if (marker.equals("</b>")) {
-//                                if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
-//                                    instructions.add(new Text(" "));
-//                                }
-//                                Text boldText = new Text(step.htmlInstructions.substring(boldStart, matcher.start()));
-//                                boldText.setFont(bold);
-//                                instructions.add(boldText);
-//                                pos = matcher.end();
-//                                lastCharIsSpace = checkIfLastCharIsSpace(step.htmlInstructions, pos);
-//                                isBold = false;
-//                                boldStart = 0;
-//                            } else {
-//                                pos = matcher.end();
-//                            }
-//                        }
-//
-//                        if (pos < step.htmlInstructions.length()) {
-//                            if (!lastCharIsSpace && !step.htmlInstructions.startsWith(")", pos)) {
-//                                instructions.add(new Text(" "));
-//                            }
-//                            instructions.add(new Text(step.htmlInstructions.substring(pos)));
-//                        }
-//
-//                        cell.add(instructions);
-//                        cell.setBorder(Border.NO_BORDER);
-//                        routeTable.addCell(cell);
-//
-//                        cell = new Cell();
-//                        cell.add(new Paragraph(step.distance.humanReadable)
-//                                .setHorizontalAlignment(HorizontalAlignment.RIGHT)
-//                        );
-//                        cell.setBorder(Border.NO_BORDER);
-//                        cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-//                        routeTable.addCell(cell);
-//                    }
-//
-//                }
-//
-//                document.add(routeTable);
-//            }
+            if (totalDistance >= 10000) {
+                document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                document.add(headerTable);
+                document.add(new Paragraph(" "));
+                document.add(new Paragraph(" "));
+
+                Table routeTable = new Table(UnitValue.createPercentArray(new float[] {5, 1})).useAllAvailableWidth();
+
+                for (StepTranslation step : routeSteps) {
+                    cell = new Cell();
+                    cell.add(new Paragraph(step.getText()));
+                    cell.setBorder(Border.NO_BORDER);
+                    routeTable.addCell(cell);
+
+                    cell = new Cell();
+                    cell.add(new Paragraph(step.getDistance() + " m")
+                            .setHorizontalAlignment(HorizontalAlignment.RIGHT)
+                    );
+                    cell.setBorder(Border.NO_BORDER);
+                    cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+                    routeTable.addCell(cell);
+                }
+
+                document.add(routeTable);
+            }
 
             document.close();
             pdfDocument.close();

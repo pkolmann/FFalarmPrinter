@@ -36,8 +36,14 @@ public class Einsatz {
         String einsatzAdresse = getEinsatzAdresse(einsatz);
         System.out.println("Einsatzadresse: " + einsatzAdresse);
 
-        Double einsatzLng = einsatz.getDouble("Lng");
-        Double einsatzLat = einsatz.getDouble("Lat");
+        Double einsatzLng = null;
+        if (einsatz.has("Lng)")) {
+            einsatzLng = einsatz.getDouble("Lng");
+        }
+        Double einsatzLat = null;
+        if (einsatz.has("Lat")) {
+            einsatzLat = einsatz.getDouble("Lat");
+        }
         System.out.println("Einsatzkoordinaten: " + einsatzLat + ";" + einsatzLng);
 
         if (einsatzLng != null && einsatzLat != null) {
@@ -218,6 +224,7 @@ public class Einsatz {
                     disponierteFF,
                     getEinsatzAdresse(einsatz),
                     route,
+                    einsatzRouter.getRouteDetails(),
                     einsatzMap
             );
 
