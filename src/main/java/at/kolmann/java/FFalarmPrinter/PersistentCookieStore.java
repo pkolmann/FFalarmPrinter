@@ -1,9 +1,13 @@
 package at.kolmann.java.FFalarmPrinter;
 
+import org.apache.commons.io.IOUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.StringTokenizer;
 
 public class PersistentCookieStore implements CookieStore, Runnable {
     private final CookieStore store;
@@ -16,78 +20,84 @@ public class PersistentCookieStore implements CookieStore, Runnable {
 
         store = new CookieManager().getCookieStore();
 
-        int i = 0;
-        String line;
-        String cookieURI = null;
-        String name = null;
-        String value = null;
-        String domain = null;
-        String path = null;
-        String expired = null;
-        String version = null;
         File dirPath = new File(filePath);
         File nameFile = new File(fileName);
         File file = new File(dirPath + File.separator + nameFile);
 
         if (file.exists()) {
+            JSONArray jsonCookies = new JSONArray();
             try {
-                InputStreamReader inputreader = new InputStreamReader(new FileInputStream(file));
+                InputStream is = new FileInputStream(dirPath + File.separator + nameFile);
+                String jsonTxt = IOUtils.toString(is, StandardCharsets.UTF_8);
+                jsonCookies = new JSONArray(jsonTxt);
+            } catch (IOException e) {
+                System.out.println("Failed to read cookie file: " + e.getMessage());
+            }
 
-                BufferedReader bufferedReader = new BufferedReader(inputreader);
-
-                while ((line = bufferedReader.readLine()) != null) {
-                    StringTokenizer tokens = new StringTokenizer(line, "#");
-                    i++;
-                    while (tokens.hasMoreTokens()) {
-                        switch (i = tokens.countTokens()) {
-                            case 7:
-                                cookieURI = tokens.nextToken();
-                                break;
-                            case 6:
-                                name = tokens.nextToken();
-                                break;
-                            case 5:
-                                value = tokens.nextToken();
-                                break;
-                            case 4:
-                                domain = tokens.nextToken();
-                                break;
-                            case 3:
-                                path = tokens.nextToken();
-                                break;
-                            case 2:
-                                version = tokens.nextToken();
-                                break;
-                            case 1:
-                                expired = tokens.nextToken();
-                                break;
-                        }
-                    }
-
-
-                    HttpCookie cookie = new HttpCookie(name, value);
-                    if (value.contentEquals("*"))
-                        cookie.setValue(null);
-                    cookie.setDomain(domain);
-                    cookie.setPath(path);
-                    cookie.setVersion(Integer.parseInt(version));
-                    cookie.setMaxAge(Long.parseLong(expired));
-
-                    store.add(new URI(cookieURI), cookie);
+            for (int i = 0; i < jsonCookies.length(); i++) {
+                JSONObject jsonCookie = (JSONObject) jsonCookies.get(i);
+                HttpCookie cookie = new HttpCookie(
+                        jsonCookie.getString("name"),
+                        jsonCookie.getString("value")
+                );
+                if (jsonCookie.has("comment")) {
+                    cookie.setComment(jsonCookie.getString("comment"));
                 }
-            } catch (URISyntaxException | IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+
+                if (jsonCookie.has("commentURL")) {
+                    cookie.setCommentURL(jsonCookie.getString("commentURL"));
+                }
+
+                if (jsonCookie.has("discard")) {
+                    cookie.setDiscard(jsonCookie.getBoolean("discard"));
+                }
+
+                if (jsonCookie.has("domain")) {
+                    cookie.setDomain(jsonCookie.getString("domain"));
+                }
+
+                if (jsonCookie.has("maxAge")) {
+                    cookie.setMaxAge(jsonCookie.getLong("maxAge"));
+                }
+
+                if (jsonCookie.has("path")) {
+                    cookie.setPath(jsonCookie.getString("path"));
+                }
+
+                if (jsonCookie.has("portList")) {
+                    cookie.setPortlist(jsonCookie.getString("portList"));
+                }
+
+                if (jsonCookie.has("secure")) {
+                    cookie.setSecure(jsonCookie.getBoolean("secure"));
+                }
+
+                if (jsonCookie.has("version")) {
+                    cookie.setVersion(jsonCookie.getInt("version"));
+                }
+
+                StringBuilder uri = new StringBuilder();
+                if (jsonCookie.getBoolean("secure")) {
+                    uri.append("https://");
+                } else {
+                    uri.append("https://");
+                }
+
+                uri.append(jsonCookie.getString("domain"));
+                if (jsonCookie.has("path")) {
+                    uri.append(jsonCookie.getString("path"));
+                }
+
+                store.add(URI.create(uri.toString()), cookie);
             }
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(this));
     }
 
+    // Shutdown Hook Runner
     @Override
     public void run() {
-        String SEPARATOR = "#";
-
         File dirPath = new File(filePath);
         File nameFile = new File(fileName);
         File file = new File(dirPath + File.separator + nameFile);
@@ -100,62 +110,36 @@ public class PersistentCookieStore implements CookieStore, Runnable {
         }
 
         // serialize cookies to persistent storage
-        List<URI> cookieURIs = store.getURIs();
-        for (URI uri : cookieURIs) {
-            List<HttpCookie> cookies = store.get(uri);
-
-            for (HttpCookie cookie : cookies) {
-                String cookieURI = uri.toASCIIString();
-
-                // https://github.com/augustopicciani/HttpClient-save-cookies-to-file/blob/master/src/com/httpclient_save_cookies/CookieHelper.java
-                String name = cookie.getName();
-                String value = "*";
-                if (cookie.getValue() != null && !cookie.getValue().contentEquals("")) {
-                    value = cookie.getValue();
-                }
-
-                String domain = "*";
-                if (cookie.getDomain() != null) {
-                    domain = cookie.getDomain();
-                }
-
-                String path = "*";
-                if (cookie.getPath() != null) {
-                    path = cookie.getPath();
-                }
-
-                int version = cookie.getVersion();
-                String ver = String.valueOf(version);
-
-                String expired = "*";
-                if (cookie.getMaxAge() != 0) {
-                    expired = Long.toString(cookie.getMaxAge());
-                }
-
-                try {
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(file,true));
-                    writer.write(cookieURI);
-                    writer.write(SEPARATOR);
-                    writer.write(name);
-                    writer.write(SEPARATOR);
-                    writer.write(value);
-                    writer.write(SEPARATOR);
-                    writer.write(domain);
-                    writer.write(SEPARATOR);
-                    writer.write(path);
-                    writer.write(SEPARATOR);
-                    writer.write(ver);
-                    writer.write(SEPARATOR);
-                    writer.write(expired);
-                    writer.write(SEPARATOR);
-                    writer.newLine();
-                    writer.flush();
-                    writer.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+        JSONArray jsonCookies = new JSONArray();
+        for (HttpCookie cookie : store.getCookies()) {
+            jsonCookies.put(getJsonCookie(cookie));
         }
+
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file,true));
+            writer.write(jsonCookies.toString());
+            writer.newLine();
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static JSONObject getJsonCookie(HttpCookie cookie) {
+        JSONObject jsonCookie = new JSONObject();
+        jsonCookie.put("comment", cookie.getComment());
+        jsonCookie.put("commentURL", cookie.getCommentURL());
+        jsonCookie.put("discard", cookie.getDiscard());
+        jsonCookie.put("domain", cookie.getDomain());
+        jsonCookie.put("maxAge", cookie.getMaxAge());
+        jsonCookie.put("name", cookie.getName());
+        jsonCookie.put("path", cookie.getPath());
+        jsonCookie.put("portList", cookie.getPortlist());
+        jsonCookie.put("secure", cookie.getSecure());
+        jsonCookie.put("value", cookie.getValue());
+        jsonCookie.put("version", cookie.getVersion());
+        return jsonCookie;
     }
 
     @Override
@@ -187,5 +171,4 @@ public class PersistentCookieStore implements CookieStore, Runnable {
     public boolean removeAll() {
         return store.removeAll();
     }
-
 }
