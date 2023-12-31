@@ -36,15 +36,7 @@ public class Florian10Fetcher {
             HttpURLConnection connection = getHttpURLConnection(urlToFetch);
 
             List<HttpCookie> cookies = this.cookieManager.getCookieStore().getCookies();
-            System.out.println("Cookies Cound: " + cookies.size());
-            for (HttpCookie cookie: cookies) {
-                System.out.println(cookie);
-            }
-
             Map<String, List<String>> headers = connection.getHeaderFields();
-            for (String key : headers.keySet()) {
-                System.out.println("    * " + key + ":" + headers.get(key));
-            }
 //            System.out.println("Connection Response: " + connection.getResponseCode());
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 JSONObject error = new JSONObject();
