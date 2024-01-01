@@ -103,7 +103,7 @@ public class EinsatzHTML {
                 info.append("    ").append(einsatz.getString("Abschnitt")).append("<br />\n");
             }
             if (einsatz.has("Nummer1")) {
-                long nr = einsatz.getLong("Nummer1");
+                double nr = einsatz.getDouble("Nummer1");
                 if (nr > 1000) {
                     nr /= 100;
                 } else if (nr > 100) {
