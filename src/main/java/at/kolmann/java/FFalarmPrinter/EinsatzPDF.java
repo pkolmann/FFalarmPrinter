@@ -149,7 +149,7 @@ public class EinsatzPDF {
             table.addCell(cell);
 
             // Melder
-            if (einsatz.getString("Melder") != null) {
+            if (einsatz.has("Melder") && einsatz.getString("Melder") != null) {
                 cell = new Cell();
                 cell.add(new Paragraph("Melder:"));
                 cell.setFont(bold);
