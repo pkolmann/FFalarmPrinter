@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Objects;
 
 public class Einsatz {
     private final Config config;
@@ -31,18 +32,29 @@ public class Einsatz {
 
     public void process(@NotNull JSONObject einsatz, String savePath, String alarmPath) throws IOException {
         String einsatzID = einsatz.getString("EinsatzID");
-        System.out.println(einsatzID);
+        System.out.println("EinsatzID: " + einsatzID);
 
         String einsatzAdresse = getEinsatzAdresse(einsatz);
         System.out.println("Einsatzadresse: " + einsatzAdresse);
 
         Double einsatzLng = null;
-        if (einsatz.has("Lng)")) {
-            einsatzLng = einsatz.getDouble("Lng");
-        }
         Double einsatzLat = null;
-        if (einsatz.has("Lat")) {
-            einsatzLat = einsatz.getDouble("Lat");
+        if (
+                einsatz.has("Accuracy")
+                && (Objects.equals(einsatz.getString("Accuracy"), "geocoded")
+                    || Objects.equals(einsatz.getString("Accuracy"), "pos")
+                )
+        ) {
+            if (einsatz.has("Lng")) {
+                einsatzLng = einsatz.getDouble("Lng");
+            } else {
+                System.out.println("GeoCoded but Lng not found in JSON");
+            }
+            if (einsatz.has("Lat")) {
+                einsatzLat = einsatz.getDouble("Lat");
+            } else {
+                System.out.println("GeoCoded but Lat not found in JSON");
+            }
         }
         System.out.println("Einsatzkoordinaten: " + einsatzLat + ";" + einsatzLng);
 

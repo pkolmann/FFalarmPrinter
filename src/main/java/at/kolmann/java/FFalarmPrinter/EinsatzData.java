@@ -5,6 +5,8 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.util.Calendar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EinsatzData {
     final Config config;
@@ -19,8 +21,29 @@ public class EinsatzData {
         this.archivePageGenerator = new ArchivePageGenerator(config);
     }
 
-    public void process(JSONObject einsatzJSON) {
+    public void process(JSONObject einsatzJSON, String inputFileString) {
         Calendar myCal = Calendar.getInstance();
+
+        if (inputFileString != null) {
+            // Check if we have a date coded in the file to start again from
+            Pattern pattern = Pattern.compile(".*alarm-([0-9]{8})-([0-9]{6}).json$", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(inputFileString);
+            if(matcher.find()) {
+                if (matcher.groupCount() == 2) {
+                    int year = Integer.parseInt(matcher.group(1).substring(0, 4));
+                    int month = Integer.parseInt(matcher.group(1).substring(4, 6));
+                    int day = Integer.parseInt(matcher.group(1).substring(6, 8));
+                    int hour = Integer.parseInt(matcher.group(2).substring(0, 2));
+                    int min = Integer.parseInt(matcher.group(2).substring(2, 4));
+                    int sec = Integer.parseInt(matcher.group(2).substring(4, 6));
+                    myCal = new Calendar.Builder().setCalendarType("gregory")
+                            .setDate(year, (month - 1), day)
+                            .setTimeOfDay(hour, min, sec)
+                            .build();
+                }
+            }
+        }
+
         String yearString = String.format(("%tY"), myCal);
         String alarmString = String.format(("alarm-%tY%<tm%<td-%<tH%<tM%<tS"), myCal);
         String savePath = config.getString("saveWEBlocation");
@@ -28,7 +51,8 @@ public class EinsatzData {
         JSONArray einsatzData = einsatzJSON.getJSONArray("EinsatzData");
 
         String einsatzJSONHashCode = String.valueOf(einsatzJSON.toString().hashCode());
-        if (einsatzJSONHashCode.equals(lastEinsatzStore.getLastEinsatzHash())) {
+        // always recreate if inputFileString is given
+        if (inputFileString == null && einsatzJSONHashCode.equals(lastEinsatzStore.getLastEinsatzHash())) {
             // No changes since last run. No need to regenerate data
             return;
         }

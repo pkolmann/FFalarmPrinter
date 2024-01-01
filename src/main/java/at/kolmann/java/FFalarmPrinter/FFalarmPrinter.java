@@ -3,9 +3,7 @@ package at.kolmann.java.FFalarmPrinter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.File;
 import java.util.Calendar;
 
 
@@ -27,19 +25,37 @@ public class FFalarmPrinter {
         einsatzData = new EinsatzData(config);
     }
 
-    public void run() {
+    public void run(String inputFileString) {
 //        System.out.println(System.getProperty("os.name"));
         Calendar myCal = Calendar.getInstance();
 
         String urlToFetch = null;
-        if (config.get("wastlUrl") instanceof String) {
-            urlToFetch = config.getString("wastlUrl");
-        }
-        if (urlToFetch == null) {
-            urlToFetch = "https://infoscreen.florian10.info/ows/infoscreen/einsatz.ashx";
+        JSONObject florian10Data = null;
+        if (inputFileString != null) {
+            File inputFile = new File(inputFileString);
+
+            if (!inputFile.isAbsolute()) {
+                inputFile = new File(System.getProperty("user.dir") + File.separator + inputFileString);
+            }
+
+            if (inputFile.exists()) {
+                // If file exists, use it.
+                StringBuilder inputString = Tools.readFile(inputFile);
+                florian10Data = new JSONObject(inputString.toString());
+            } else {
+                urlToFetch = inputFileString;
+            }
         }
 
-        JSONObject florian10Data = florian10Fetcher.fetchFlorian10Data(urlToFetch);
+        if (florian10Data == null) {
+            if (config.get("wastlUrl") instanceof String) {
+                urlToFetch = config.getString("wastlUrl");
+            }
+            if (urlToFetch == null) {
+                urlToFetch = "https://infoscreen.florian10.info/ows/infoscreen/einsatz.ashx";
+            }
+            florian10Data = florian10Fetcher.fetchFlorian10Data(urlToFetch);
+        }
 
         if (florian10Data == null) {
             System.out.printf("%tY-%<tm-%<td %<tH:%<tM:%<tS%n", myCal);
@@ -63,7 +79,8 @@ public class FFalarmPrinter {
                     System.out.println(florian10Data.get("Token"));
                     System.out.println();
                 } else if (florian10Data.getString("CurrentState").equals("data") && florian10Data.has("EinsatzData")) {
-                    einsatzData.process(florian10Data);
+                    // Process data
+                    einsatzData.process(florian10Data, inputFileString);
                 } else if (florian10Data.getString("CurrentState").equals("error")) {
                     System.out.printf("%tY-%<tm-%<td %<tH:%<tM:%<tS%n", myCal);
                     System.out.println("Fehler von Florian Krems gemeldet:");
