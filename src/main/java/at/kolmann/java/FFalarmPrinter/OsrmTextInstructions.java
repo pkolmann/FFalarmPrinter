@@ -36,20 +36,7 @@ public class OsrmTextInstructions {
         }
 
         if (languageFile.exists()) {
-            StringBuilder langString = new StringBuilder();
-
-            try {
-                InputStreamReader inputReader = new InputStreamReader(new FileInputStream(languageFile));
-                BufferedReader bufferedReader = new BufferedReader(inputReader);
-
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    langString.append(line);
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            StringBuilder langString = Tools.readFile(languageFile);
 
             JSONObject loadedObject = new JSONObject(langString.toString());
             String mainLangKey = "v5";
