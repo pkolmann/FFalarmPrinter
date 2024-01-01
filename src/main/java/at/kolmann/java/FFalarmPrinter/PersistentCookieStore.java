@@ -2,6 +2,7 @@ package at.kolmann.java.FFalarmPrinter;
 
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -32,6 +33,9 @@ public class PersistentCookieStore implements CookieStore, Runnable {
                 jsonCookies = new JSONArray(jsonTxt);
             } catch (IOException e) {
                 System.out.println("Failed to read cookie file: " + e.getMessage());
+            } catch (JSONException e) {
+                System.out.println("Failed to decode JSON stream, starting with new cookie!");
+                System.out.println(e.getMessage());
             }
 
             for (int i = 0; i < jsonCookies.length(); i++) {
