@@ -40,9 +40,6 @@ public class EinsatzRouter {
         } else {
             this.osrmTextInstructions = new OsrmTextInstructions();
         }
-
-        System.out.println(this.osrmTextInstructions.ordinalize(5));
-        System.out.println(this.osrmTextInstructions.directionFromDegree(155.0));
     }
 
     public void shutdown() {}
