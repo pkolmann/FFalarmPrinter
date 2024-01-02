@@ -190,11 +190,14 @@ public class EinsatzHTML {
                 }
 
                 dispoList.append(currentDispo.getString("Name"));
-                dispoList.append(" (Dispo: ");
-                dispoList.append(currentDispo.getString("DispoTime")
-                        .replace(today, "")
-                        .replace('T', ' ')
-                );
+                dispoList.append(" (");
+                if (currentDispo.has("DispoTime")) {
+                    dispoList.append(" (Dispo: ");
+                    dispoList.append(currentDispo.getString("DispoTime")
+                            .replace(today, "")
+                            .replace('T', ' ')
+                    );
+                }
                 if (currentDispo.has("AlarmTime")) {
                     dispoList.append(", Alarm: ");
                     dispoList.append(currentDispo.getString("AlarmTime")

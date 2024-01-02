@@ -219,11 +219,14 @@ public class EinsatzPDF {
                     }
                     Paragraph dispoPara = new Paragraph();
                     dispoPara.add(currentDispo.getString("Name"));
-                    dispoPara.add(" (Dispo: ");
-                    dispoPara.add(currentDispo.getString("DispoTime")
-                            .replace(today, "")
-                            .replace('T', ' ')
-                    );
+                    dispoPara.add(" (");
+                    if (currentDispo.has("DispoTime")) {
+                        dispoPara.add("Dispo: ");
+                        dispoPara.add(currentDispo.getString("DispoTime")
+                                .replace(today, "")
+                                .replace('T', ' ')
+                        );
+                    }
                     if (currentDispo.has("AlarmTime")) {
                         dispoPara.add(", Alarm: ");
                         dispoPara.add(currentDispo.getString("AlarmTime")

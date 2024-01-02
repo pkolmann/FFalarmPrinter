@@ -211,11 +211,13 @@ public class Einsatz {
                         String valA = "";
                         String valB = "";
 
-                        try {
-                            valA = a.getString(KEY_NAME);
-                            valB = b.getString(KEY_NAME);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                        if (a.has(KEY_NAME) && b.has(KEY_NAME)) {
+                            try {
+                                valA = a.getString(KEY_NAME);
+                                valB = b.getString(KEY_NAME);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
 
                         return valA.compareTo(valB);
