@@ -191,22 +191,31 @@ public class EinsatzHTML {
 
                 dispoList.append(currentDispo.getString("Name"));
                 dispoList.append(" (");
+                boolean needsBreak = false;
                 if (currentDispo.has("DispoTime")) {
-                    dispoList.append(" (Dispo: ");
+                    dispoList.append("Dispo: ");
                     dispoList.append(currentDispo.getString("DispoTime")
                             .replace(today, "")
                             .replace('T', ' ')
                     );
+                    needsBreak = true;
                 }
                 if (currentDispo.has("AlarmTime")) {
-                    dispoList.append(", Alarm: ");
+                    if (needsBreak) {
+                        dispoList.append(", ");
+                    }
+                    dispoList.append("Alarm: ");
                     dispoList.append(currentDispo.getString("AlarmTime")
                             .replace(today, "")
                             .replace('T', ' ')
                     );
+                    needsBreak = true;
                 }
                 if (currentDispo.has("AusTime")) {
-                    dispoList.append(", Aus: ");
+                    if (needsBreak) {
+                        dispoList.append(", ");
+                    }
+                    dispoList.append("Aus: ");
                     dispoList.append(currentDispo.getString("AusTime")
                             .replace(today, "")
                             .replace('T', ' ')

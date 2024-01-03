@@ -220,22 +220,30 @@ public class EinsatzPDF {
                     Paragraph dispoPara = new Paragraph();
                     dispoPara.add(currentDispo.getString("Name"));
                     dispoPara.add(" (");
+                    boolean needsBreak = false;
                     if (currentDispo.has("DispoTime")) {
                         dispoPara.add("Dispo: ");
                         dispoPara.add(currentDispo.getString("DispoTime")
                                 .replace(today, "")
                                 .replace('T', ' ')
                         );
+                        needsBreak = true;
                     }
                     if (currentDispo.has("AlarmTime")) {
-                        dispoPara.add(", Alarm: ");
+                        if (needsBreak) {
+                            dispoPara.add(", ");
+                        }
+                        dispoPara.add("Alarm: ");
                         dispoPara.add(currentDispo.getString("AlarmTime")
                                 .replace(today, "")
                                 .replace('T', ' ')
                         );
                     }
                     if (currentDispo.has("AusTime")) {
-                        dispoPara.add(", Aus: ");
+                        if (needsBreak) {
+                            dispoPara.add(", ");
+                        }
+                        dispoPara.add("Aus: ");
                         dispoPara.add(currentDispo.getString("AusTime")
                                 .replace(today, "")
                                 .replace('T', ' ')
