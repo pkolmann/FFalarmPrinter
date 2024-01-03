@@ -108,7 +108,7 @@
             }
 
             const map = L.map('map').setView([endLat, endLong], mapZoom);
-            L.tileLayer('http://b.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 20,
                 attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributers'
             }).addTo(map);
