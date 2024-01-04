@@ -68,14 +68,16 @@ public class ArchivePageGenerator {
             boolean first = true;
             for (File file1 : files1) {
                 if (file1.isDirectory()) {
+                    String fileOnly = (file1.toString().lastIndexOf(File.separator) > -1 )
+                            ? file1.toString().substring(file1.toString().lastIndexOf(File.separator) + 1)
+                            : file1.toString();
+                    if (!isNumeric(fileOnly)) continue;
+
                     if (first) {
                         first = false;
                     } else {
                         archiv.append(" | ");
                     }
-                    String fileOnly = (file1.toString().lastIndexOf(File.separator) > -1 )
-                            ? file1.toString().substring(file1.toString().lastIndexOf(File.separator) + 1)
-                            : file1.toString();
                     archiv.append("<a href=\"#").append(fileOnly).append("\">").append(fileOnly).append("</a>");
                 }
             }
@@ -173,5 +175,17 @@ public class ArchivePageGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static boolean isNumeric(String strNum) {
+        if (strNum == null) {
+            return false;
+        }
+        try {
+            double d = Double.parseDouble(strNum);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
     }
 }
