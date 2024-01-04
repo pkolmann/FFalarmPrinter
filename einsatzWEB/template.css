@@ -36,6 +36,11 @@
     margin-top: 3vh;
 }
 
+#archive-header {
+    margin-bottom: 1.5em;
+    margin-left: 1.5em;
+}
+
 .inputliste .zeile {
     margin-top: 10px;
 }

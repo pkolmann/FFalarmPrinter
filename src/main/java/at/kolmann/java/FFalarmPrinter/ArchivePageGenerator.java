@@ -60,9 +60,29 @@ public class ArchivePageGenerator {
         archiv.append("    <div id=\"header\">\n");
         archiv.append("        <h1>FF Archiv</h1>\n");
         archiv.append("    </div>\n");
-        archiv.append("    <div id=\"archive-list\">\n");
+        archiv.append("    <div id=\"archive-header\">\n");
 
         File[] files1 = savePathFile.listFiles();
+        if (files1 != null) {
+            Arrays.sort(files1, (a, b) -> -a.getName().compareTo(b.getName()));
+            boolean first = true;
+            for (File file1 : files1) {
+                if (file1.isDirectory()) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        archiv.append(" | ");
+                    }
+                    String fileOnly = (file1.toString().lastIndexOf(File.separator) > -1 )
+                            ? file1.toString().substring(file1.toString().lastIndexOf(File.separator) + 1)
+                            : file1.toString();
+                    archiv.append("<a href=\"#").append(fileOnly).append("\">").append(fileOnly).append("</a>");
+                }
+            }
+        }
+        archiv.append("    </div>\n");
+
+        archiv.append("    <div id=\"archive-list\">\n");
         if (files1 != null) {
             Arrays.sort(files1, (a, b) -> -a.getName().compareTo(b.getName()));
             for (File file1 : files1) {
@@ -73,7 +93,14 @@ public class ArchivePageGenerator {
                         continue;
                     }
 
-                    archiv.append("    <h3>").append(dirName).append("</h3>\n");
+                    String fileOnly = (file1.toString().lastIndexOf(File.separator) > -1 )
+                            ? file1.toString().substring(file1.toString().lastIndexOf(File.separator) + 1)
+                            : file1.toString();
+                    archiv.append("    <h3>")
+                            .append("<a name=\"").append(fileOnly).append("\">")
+                            .append(dirName)
+                            .append("</a>")
+                            .append("</h3>\n");
                     archiv.append("        <ul>\n");
                     TreeMap<String, ArrayList<String>> alarmFiles = new TreeMap<>();
                     for (File file : files) {
