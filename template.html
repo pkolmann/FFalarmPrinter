@@ -112,6 +112,55 @@
                 maxZoom: 20,
                 attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributers'
             }).addTo(map);
+            const BasemapAT_highdpi = L.tileLayer('https://mapsneu.wien.gv.at/basemap/bmaphidpi/{type}/google3857/{z}/{y}/{x}.{format}', {
+                maxZoom: 19,
+                attribution: 'Datenquelle: <a href="https://www.basemap.at">basemap.at</a>',
+                type: 'normal',
+                format: 'jpeg',
+                bounds: [[46.35877, 8.782379], [49.037872, 17.189532]]
+            });
+            const BasemapAT_orthofoto = L.tileLayer('https://mapsneu.wien.gv.at/basemap/bmaporthofoto30cm/{type}/google3857/{z}/{y}/{x}.{format}', {
+                maxZoom: 20,
+                attribution: 'Datenquelle: <a href="https://www.basemap.at">basemap.at</a>',
+                type: 'normal',
+                format: 'jpeg',
+                bounds: [[46.35877, 8.782379], [49.037872, 17.189532]]
+            });
+            const googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
+                maxZoom: 20,
+                subdomains:['mt0','mt1','mt2','mt3']
+            });
+            const googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+                maxZoom: 20,
+                subdomains:['mt0','mt1','mt2','mt3']
+            });
+
+            const OpenFireMap = L.tileLayer('http://openfiremap.org/hytiles/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Map style: &copy; <a href="http://www.openfiremap.org">OpenFireMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+            }).addTo(map);
+            const BasemapAT_overlay = L.tileLayer('https://mapsneu.wien.gv.at/basemap/bmapoverlay/{type}/google3857/{z}/{y}/{x}.{format}', {
+                maxZoom: 19,
+                attribution: 'Datenquelle: <a href="https://www.basemap.at">basemap.at</a>',
+                type: 'normal',
+                format: 'png',
+                bounds: [[46.35877, 8.782379], [49.037872, 17.189532]]
+            });
+
+            const basemaps = {
+                'OpenStreetMap': osm,
+                'BasemapAT': BasemapAT_highdpi,
+                'Google Streets': googleStreets,
+                'BasemapAT Orthofoto': BasemapAT_orthofoto,
+                'Google Sat': googleSat
+            };
+
+            const overlays = {
+                OpenFireMap: OpenFireMap,
+                BasemapAT: BasemapAT_overlay
+            };
+
+            const layerControl = L.control.layers(basemaps, overlays, {collapsed: false}).addTo(map);
 
             // Add hydrants to map first, so other layers are infront
             for (const i in hydrantsJson) {
