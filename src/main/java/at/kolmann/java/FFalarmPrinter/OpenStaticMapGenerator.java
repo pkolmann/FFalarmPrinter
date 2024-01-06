@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 
 public class OpenStaticMapGenerator implements StaticMapGenerator {
@@ -17,11 +18,7 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
     private final PolylineDecoder polylineDecoder = new PolylineDecoder();
 
     private final String[] tileServer = {
-            "https://maps.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
-            "https://maps1.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
-            "https://maps2.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
-            "https://maps3.wien.gv.at/basemap/geolandbasemap/normal/google3857/",
-            "https://maps4.wien.gv.at/basemap/geolandbasemap/normal/google3857/"
+            "https://tile.openstreetmap.org/"
     };
 
     static final private int NUMBER_OF_TILES = 5;
@@ -82,16 +79,18 @@ public class OpenStaticMapGenerator implements StaticMapGenerator {
                         String urlStr = tileServer[tileServerId] +
                                 mapZoom +
                                 "/" +
-                                y +
-                                "/" +
                                 x +
+                                "/" +
+                                y +
                                 ".png";
                         URL imageUrl =  new URL(urlStr);
                         tileServerId++;
                         if (tileServerId >= tileServer.length) tileServerId = 0;
 
+                        URLConnection iuc = imageUrl.openConnection();
+                        iuc.setRequestProperty("User-Agent", "FFalarmPrinter");
                         try {
-                            Image image = ImageIO.read(imageUrl);
+                            Image image = ImageIO.read(iuc.getInputStream());
                             baseMapGraphics.drawImage(image, xOffset, yOffset, null);
                             yOffset += TILE_PIXELS;
                         } catch (IOException e) {
