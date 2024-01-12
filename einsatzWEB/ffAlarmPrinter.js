@@ -186,4 +186,8 @@ function initialize() {
     // https://stackoverflow.com/a/61982880
     endMarker._icon.classList.add("endHue");
 
+    L.control.scale({
+        imperial: false
+    }).addTo(map);
+
 }
