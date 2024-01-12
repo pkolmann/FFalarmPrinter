@@ -56,6 +56,17 @@
     margin-left: 160px;
 }
 
+@media only screen
+and (min-width: 768px) {
+    .inputliste .links {
+        width: 200px;
+    }
+
+    .inputliste .rechts {
+        margin-left: 210px;
+    }
+}
+
 #directionsPanel {
     display: none;
     margin: 2%;
