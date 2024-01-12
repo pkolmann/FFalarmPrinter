@@ -270,7 +270,7 @@ public class EinsatzHTML {
         template = template.replaceAll("@@INPUTLISTE@@", info.toString());
         template = template.replaceAll("@@ROUTESTEPS@@", escape(routeSteps));
 
-        System.out.println("Saving HTML to " + fileName);
+        System.out.println("Saving HTML to file://" + fileName.replace(" ", "%20"));
         File file = new File(fileName);
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(file));

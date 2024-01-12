@@ -41,7 +41,7 @@ public class EinsatzPDF {
     {
         try {
             bold = PdfFontFactory.createFont(StandardFonts.TIMES_BOLD);
-            System.out.println("Saving PDF to " + fileName);
+            System.out.println("Saving PDF to file://" + fileName.replace(" ", "%20"));
             // https://www.vogella.com/tutorials/JavaPDF/article.html
             // https://www.mikesdotnetting.com/article/82/itextsharp-adding-text-with-chunks-phrases-and-paragraphs
             PdfDocument pdfDocument = new PdfDocument(new PdfWriter(fileName));

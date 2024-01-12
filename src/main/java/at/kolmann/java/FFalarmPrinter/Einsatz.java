@@ -64,10 +64,9 @@ public class Einsatz {
 
             JSONObject routerResult = einsatzRouter.getResult();
             String routeResultFile = savePath + File.separator + alarmPath+"_route.json";
-            System.out.println("routeResultFile: " + routeResultFile);
             if (routerResult != null) {
                 try (FileOutputStream fos = new FileOutputStream(routeResultFile)) {
-                    System.out.println("Saving Map to " + routeResultFile);
+                    System.out.println("Saving Map to file://" + routeResultFile.replace(" ", "%20"));
                     fos.write(routerResult.toString().getBytes());
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -170,9 +169,8 @@ public class Einsatz {
                 }
 
                 String hydrantsResultFile = savePath + File.separator + alarmPath+"_hydrants.json";
-                System.out.println("hydrantsResultFile: " + hydrantsResultFile);
                 try (FileOutputStream fos = new FileOutputStream(hydrantsResultFile)) {
-                    System.out.println("Saving Hydrants to " + hydrantsResultFile);
+                    System.out.println("Saving Hydrants to file://" + hydrantsResultFile.replace(" ", "%20"));
                     fos.write(hydrantsResult.toString().getBytes());
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -182,7 +180,9 @@ public class Einsatz {
             byte[] einsatzMap = einsatzRouter.getMapsImage(hydrants);
             if (einsatzMap != null) {
                 try (FileOutputStream fos = new FileOutputStream(savePath + File.separator + alarmPath+".png")) {
-                    System.out.println("Saving Map to " + savePath + File.separator + alarmPath + ".png");
+                    System.out.println("Saving Map to file://" + savePath.replace(" ", "%20")
+                            + File.separator + alarmPath.replace(" ", "%20" + ".png")
+                    );
                     fos.write(einsatzMap);
                 } catch (IOException e) {
                     e.printStackTrace();
