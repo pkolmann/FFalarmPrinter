@@ -2,6 +2,8 @@ package at.kolmann.java.FFalarmPrinter;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.printing.PDFPageable;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import javax.print.DocFlavor;
 import javax.print.PrintService;
@@ -12,7 +14,6 @@ import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 public class EinsatzPrint {
     private final Config config;
@@ -23,7 +24,7 @@ public class EinsatzPrint {
         this.lastEinsatzStore = lastEinsatzStore;
     }
 
-    public void process(String einsatzID, String filePath) throws IOException, PrinterException {
+    public void process(String einsatzID, JSONObject einsatz, String filePath) throws IOException, PrinterException {
         // Don't print, if this Einsatz has been processed before
         if (lastEinsatzStore.contains(einsatzID)) {
             return;
@@ -70,6 +71,27 @@ public class EinsatzPrint {
 
         if (myPrinter == null) {
             throw new PrinterException("Printer not found");
+        }
+
+        if (config.has("printerIgnores")) {
+            JSONArray ignores = (JSONArray) config.get("printerIgnores");
+            for (int i = 0; i < ignores.length(); i++) {
+                if (
+                        einsatz.has("Alarmstufe")
+                                && einsatz.getString("Alarmstufe").contains((String) ignores.get(i))
+                ) {
+                    System.out.println("Ignoring printing because 'Alarmstufe' contains '" + ignores.get(i) + "'");
+                    return;
+                }
+
+                if (
+                        einsatz.has("Meldebild")
+                                && einsatz.getString("Meldebild").contains((String) ignores.get(i))
+                ) {
+                    System.out.println("Ignoring printing because 'Meldebild' contains '" + ignores.get(i) + "'");
+                    return;
+                }
+            }
         }
 
         System.out.println("Printing PDF " + filePath + " to " + myPrinter.getName());

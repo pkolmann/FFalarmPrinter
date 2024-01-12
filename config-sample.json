@@ -41,6 +41,13 @@
   
   "_comment_printerName": "If specified, the EinsatzPDF will be printed. Printer needs to be able to print PDF itself. Set to 'none' to disable printing and now show available printers",
   "printerName": null,
+
+  "_comment_printerIgnores": "Array of Strings which is checked to not contain in Alarmstufe and Meldebild",
+  "printerIgnores": [
+    "D0",
+    "D1",
+    "T0"
+  ],
   
   "_comment_LastEinsatzFile": "Filename where current Einsaetze will be saved, so only new Einsaetze will be printed.",
   "lastEinsatzFile": "lastEinsatz.txt"

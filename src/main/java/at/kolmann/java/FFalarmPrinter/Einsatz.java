@@ -257,7 +257,7 @@ public class Einsatz {
             );
 
             try {
-                einsatzPrint.process(einsatzID,savePath + File.separator + alarmPath+".pdf");
+                einsatzPrint.process(einsatzID, einsatz, savePath + File.separator + alarmPath+".pdf");
             } catch (IOException | PrinterException e) {
                 System.out.println("einsatzPrint Error: " + e.getMessage());
             }
