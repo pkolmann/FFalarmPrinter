@@ -51,18 +51,34 @@ public class EinsatzPDF {
             document.setFontSize(12);
 
             Table headerTable = new Table(UnitValue.createPercentArray(new float[] {3, 1})).useAllAvailableWidth();
-            Cell cell = new Cell();
-            if (config.has("FeuerwehrName") && !config.getString("FeuerwehrName").isEmpty()) {
-                cell.add(new Paragraph(config.getString("FeuerwehrName") + " Einsatzplan"));
-            } else {
-                cell.add(new Paragraph("Einsatzplan"));
+            StringBuilder headerCell = new StringBuilder();
+            if (einsatz.getString("Alarmstufe") != null && einsatz.getString("Meldebild") != null) {
+                headerCell.append(einsatz.getString("Alarmstufe"));
+                headerCell.append(" - ");
+                headerCell.append(einsatz.getString("Meldebild"));
+                headerCell.append("\n");
             }
-            cell.setFontSize(22);
+            headerCell.append(einsatzID);
+
+            Cell cell = new Cell();
+            if (
+                    einsatz.has("Alarmstufe") && !einsatz.getString("Alarmstufe").isEmpty()
+                    && einsatz.has("Meldebild") && !einsatz.getString("Meldebild").isEmpty()
+            ) {
+                cell.add(new Paragraph(einsatz.getString("Alarmstufe") + " - "
+                            + einsatz.getString("Meldebild")
+                        ).setFontSize(22)
+                );
+                cell.add(new Paragraph(einsatzID) .setFontSize(18));
+            } else {
+                cell.add(new Paragraph(einsatzID) .setFontSize(22));
+            }
             cell.setTextAlignment(TextAlignment.CENTER);
             cell.setBorder(Border.NO_BORDER);
             cell.setVerticalAlignment(VerticalAlignment.MIDDLE);
             headerTable.addCell(cell);
 
+            boolean feuerwehrLogoAdded = false;
             if (config.getString("FeuerwehrLogo") != null) {
                 String imageFileString = config.getString("FeuerwehrLogo");
                 File imageFile = new File(imageFileString);
@@ -82,58 +98,21 @@ public class EinsatzPDF {
                     cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                     cell.setBorder(Border.NO_BORDER);
                     headerTable.addCell(cell);
+                    feuerwehrLogoAdded = true;
                 }
-            } else {
+            }
+            if (!feuerwehrLogoAdded) {
                 cell = new Cell();
                 cell.add(new Paragraph(""));
                 cell.setBorder(Border.NO_BORDER);
                 headerTable.addCell(cell);
             }
+
             document.add(headerTable);
             document.add(new Paragraph(" "));
             document.add(new Paragraph(" "));
 
-            // Einsatz-ID
-            Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 3})).useAllAvailableWidth();
-            cell = new Cell();
-            cell.add(new Paragraph("Einsatz-ID:"));
-            cell.setFont(bold);
-            cell.setBorder(Border.NO_BORDER);
-            cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-            table.addCell(cell);
-            cell = new Cell();
-            cell.add(new Paragraph(einsatzID));
-            cell.setBorder(Border.NO_BORDER);
-            table.addCell(cell);
-
-            // Alarmstufe
-            if (einsatz.getString("Alarmstufe") != null) {
-                cell = new Cell();
-                cell.add(new Paragraph("Alarmstufe:"));
-                cell.setFont(bold);
-                cell.setBorder(Border.NO_BORDER);
-                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-                table.addCell(cell);
-
-                cell = new Cell();
-                cell.add(new Paragraph(einsatz.getString("Alarmstufe")));
-                cell.setBorder(Border.NO_BORDER);
-                table.addCell(cell);
-            }
-
-            // Meldebild
-            if (einsatz.getString("Meldebild") != null) {
-                cell = new Cell();
-                cell.add(new Paragraph("Meldebild:"));
-                cell.setFont(bold);
-                cell.setBorder(Border.NO_BORDER);
-                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-                table.addCell(cell);
-                cell = new Cell();
-                cell.add(new Paragraph(einsatz.getString("Meldebild")));
-                cell.setBorder(Border.NO_BORDER);
-                table.addCell(cell);
-            }
+            Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 4})).useAllAvailableWidth();
 
             // Einsatzadresse
             cell = new Cell();
@@ -149,7 +128,7 @@ public class EinsatzPDF {
             table.addCell(cell);
 
             // Melder
-            if (einsatz.has("Melder") && einsatz.getString("Melder") != null) {
+            if (einsatz.has("Melder") && !einsatz.getString("Melder").isEmpty()) {
                 cell = new Cell();
                 cell.add(new Paragraph("Melder:"));
                 cell.setFont(bold);
@@ -168,7 +147,7 @@ public class EinsatzPDF {
             }
 
             // Bemerkung
-            if (einsatz.getString("Bemerkung") != null) {
+            if (einsatz.has("Bemerkung") && !einsatz.getString("Bemerkung").isEmpty()) {
                 cell = new Cell();
                 cell.add(new Paragraph("Bemerkung:"));
                 cell.setFont(bold);
@@ -182,21 +161,6 @@ public class EinsatzPDF {
                 table.addCell(cell);
             }
 
-            // Einsatzbeginn
-            if (einsatz.getString("EinsatzErzeugt") != null) {
-                cell = new Cell();
-                cell.add(new Paragraph("Einsatzbeginn:"));
-                cell.setFont(bold);
-                cell.setBorder(Border.NO_BORDER);
-                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-                table.addCell(cell);
-
-                cell = new Cell();
-                cell.add(new Paragraph(einsatz.getString("EinsatzErzeugt")
-                        .replace('T', ' ')));
-                cell.setBorder(Border.NO_BORDER);
-                table.addCell(cell);
-            }
             // Dispositionen
             if (disponierteFF != null) {
                 cell = new Cell();
@@ -253,13 +217,29 @@ public class EinsatzPDF {
 
                     ListItem item = new ListItem();
                     if (config.has("FeuerwehrName") &&
-                            currentDispo.getString("Name").equals(config.getString("FeuerwehrName"))) {
+                            currentDispo.getString("Name").contains(config.getString("FeuerwehrName"))) {
                         dispoPara.setBold();
                     }
                     item.add(dispoPara);
                     dispoList.add(item);
                 }
                 cell.add(dispoList);
+                cell.setBorder(Border.NO_BORDER);
+                table.addCell(cell);
+            }
+
+            // Einsatzbeginn
+            if (einsatz.has("EinsatzErzeugt") && !einsatz.getString("EinsatzErzeugt").isEmpty()) {
+                cell = new Cell();
+                cell.add(new Paragraph("Einsatzbeginn:"));
+                cell.setFont(bold);
+                cell.setBorder(Border.NO_BORDER);
+                cell.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+                table.addCell(cell);
+
+                cell = new Cell();
+                cell.add(new Paragraph(einsatz.getString("EinsatzErzeugt")
+                        .replace('T', ' ')));
                 cell.setBorder(Border.NO_BORDER);
                 table.addCell(cell);
             }

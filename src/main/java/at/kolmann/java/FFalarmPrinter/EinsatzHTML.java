@@ -16,7 +16,9 @@ import java.util.stream.Stream;
 public class EinsatzHTML {
     private final Config config;
 
-    public EinsatzHTML(Config config) {this.config = config;}
+    public EinsatzHTML(Config config) {
+        this.config = config;
+    }
 
     public void saveEinsatz(
             String fileName,
@@ -53,46 +55,24 @@ public class EinsatzHTML {
         }
 
         StringBuilder templateSB = new StringBuilder();
-        try (Stream<String> stream = Files.lines( Paths.get(templatePath), StandardCharsets.UTF_8))
-        {
+        try (Stream<String> stream = Files.lines(Paths.get(templatePath), StandardCharsets.UTF_8)) {
             stream.forEach(s -> templateSB.append(s).append("\n"));
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
         String template = templateSB.toString();
 
+        String header1 = einsatzID;
+        String header2 = "";
+        if (einsatz.getString("Alarmstufe") != null && einsatz.getString("Meldebild") != null) {
+            header1 = einsatz.getString("Alarmstufe");
+            header1 += " - ";
+            header1 += einsatz.getString("Meldebild").replaceAll("\n", "<br />" + System.lineSeparator());
+            header2 = einsatzID;
+        }
+
         StringBuilder info = new StringBuilder();
-        info.append("<div class=\"zeile\" id=\"einsatz-id\">\n");
-        info.append("<div class=\"links\">\n");
-        info.append("    Einsatz-ID:\n");
-        info.append("  </div>\n");
-        info.append("  <div class=\"rechts\">\n");
-        info.append("   ").append(einsatzID).append("\n");
-        info.append("  </div>\n");
-        info.append("</div>\n");
-
-        info.append("<div class=\"zeile\" id=\"einsatz-stufe\">\n");
-        info.append("  <div class=\"links\">\n");
-        info.append("    Alarmstufe:\n");
-        info.append("  </div>\n");
-        info.append("  <div class=\"rechts\">\n");
-        info.append("    ").append(einsatz.getString("Alarmstufe")).append("\n");
-        info.append("  </div>\n");
-        info.append("</div>\n");
-
-        info.append("<div class=\"zeile\" id=\"einsatz-bild\">\n");
-        info.append("  <div class=\"links\">\n");
-        info.append("    Meldebild:\n");
-        info.append("  </div>\n");
-        info.append("  <div class=\"rechts\">\n");
-        info.append("    ").append(einsatz.getString("Meldebild")
-                .replaceAll("\n", "<br />" + System.lineSeparator())).append("\n");
-        info.append("  </div>\n");
-        info.append("</div>\n");
-
         if (einsatz.has("Strasse") && einsatz.getString("Strasse").contains("A2")) {
             info.append("<div class=\"zeile\" id=\"einsatz-adresse\">\n");
             info.append("  <div class=\"links\">\n");
@@ -120,7 +100,7 @@ public class EinsatzHTML {
             info.append("    Adresse:\n");
             info.append("  </div>\n");
             info.append("  <div class=\"rechts\">\n");
-            info.append(einsatzAdresse.replaceAll(System.lineSeparator(), "<br />"+System.lineSeparator()));
+            info.append(einsatzAdresse.replaceAll(System.lineSeparator(), "<br />" + System.lineSeparator()));
             info.append("  </div>\n");
             info.append("</div>\n");
         }
@@ -133,8 +113,7 @@ public class EinsatzHTML {
             info.append("  <div class=\"rechts\">\n");
 
             StringBuilder melder = new StringBuilder();
-            melder.append(einsatz.getString("Melder")
-                    .replaceAll("\n", "<br />" + System.lineSeparator()));
+            melder.append(einsatz.getString("Melder").replaceAll("\n", "<br />" + System.lineSeparator()));
             if (einsatz.has("MelderTelefon") && !einsatz.getString("MelderTelefon").isEmpty()) {
                 melder.append(" (").append(einsatz.getString("MelderTelefon")).append(")");
             }
@@ -143,14 +122,14 @@ public class EinsatzHTML {
             info.append("</div>\n");
         }
 
+        // Bemerkung
         if (einsatz.has("Bemerkung") && !einsatz.getString("Bemerkung").isEmpty()) {
             info.append("<div class=\"zeile\" id=\"einsatz-bemerkung\">\n");
             info.append("  <div class=\"links\">\n");
             info.append("    Bemerkung:\n");
             info.append("  </div>\n");
             info.append("  <div class=\"rechts\">\n");
-            info.append("    ").append(einsatz.getString("Bemerkung")
-                    .replaceAll("\n", "<br />" + System.lineSeparator())).append("<br />\n");
+            info.append("    ").append(einsatz.getString("Bemerkung").replaceAll("\n", "<br />" + System.lineSeparator())).append("<br />\n");
             info.append("  </div>\n");
             info.append("</div>\n");
         }
@@ -184,8 +163,8 @@ public class EinsatzHTML {
                 }
                 dispoList.append("<li>");
 
-                if (config.has("FeuerwehrName") &&
-                        currentDispo.getString("Name").equals(config.getString("FeuerwehrName"))) {
+                if (config.has("FeuerwehrName") && currentDispo.getString("Name").contains(config.getString("FeuerwehrName"))) {
+                    System.out.println(config.getString("FeuerwehrName"));
                     dispoList.append("<b>");
                 }
 
@@ -194,10 +173,7 @@ public class EinsatzHTML {
                 boolean needsBreak = false;
                 if (currentDispo.has("DispoTime")) {
                     dispoList.append("Dispo: ");
-                    dispoList.append(currentDispo.getString("DispoTime")
-                            .replace(today, "")
-                            .replace('T', ' ')
-                    );
+                    dispoList.append(currentDispo.getString("DispoTime").replace(today, "").replace('T', ' '));
                     needsBreak = true;
                 }
                 if (currentDispo.has("AlarmTime")) {
@@ -205,10 +181,7 @@ public class EinsatzHTML {
                         dispoList.append(", ");
                     }
                     dispoList.append("Alarm: ");
-                    dispoList.append(currentDispo.getString("AlarmTime")
-                            .replace(today, "")
-                            .replace('T', ' ')
-                    );
+                    dispoList.append(currentDispo.getString("AlarmTime").replace(today, "").replace('T', ' '));
                     needsBreak = true;
                 }
                 if (currentDispo.has("AusTime")) {
@@ -216,15 +189,11 @@ public class EinsatzHTML {
                         dispoList.append(", ");
                     }
                     dispoList.append("Aus: ");
-                    dispoList.append(currentDispo.getString("AusTime")
-                            .replace(today, "")
-                            .replace('T', ' ')
-                    );
+                    dispoList.append(currentDispo.getString("AusTime").replace(today, "").replace('T', ' '));
                 }
                 dispoList.append(")");
 
-                if (config.has("FeuerwehrName") &&
-                        currentDispo.getString("Name").equals(config.getString("FeuerwehrName"))) {
+                if (config.has("FeuerwehrName") && currentDispo.getString("Name").contains(config.getString("FeuerwehrName"))) {
                     dispoList.append("</b>");
                 }
                 dispoList.append("</li>\n");
@@ -267,8 +236,10 @@ public class EinsatzHTML {
         template = template.replaceAll("@@ENDLONG@@", einsatzLong.toString());
         template = template.replaceAll("@@ROUTEJSON@@", escape(routeJson));
         template = template.replaceAll("@@HYDRANTSJSON@@", escape(hydrantsJson));
-        template = template.replaceAll("@@INPUTLISTE@@", info.toString());
         template = template.replaceAll("@@ROUTESTEPS@@", escape(routeSteps));
+        template = template.replaceAll("@@INPUTLISTE@@", info.toString());
+        template = template.replaceAll("@@HEADER1@@", header1);
+        template = template.replaceAll("@@HEADER2@@", header2);
 
         System.out.println("Saving HTML to file://" + fileName.replace(" ", "%20"));
         File file = new File(fileName);
