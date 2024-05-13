@@ -90,6 +90,14 @@ public class EinsatzRouter {
                     "&hl=en&alt=0&srv=0"
             );
 
+            if (config.has("mapBaseURL")) {
+                System.out.println(
+                        config.getString("mapBaseURL") +
+                                "?loc="+config.getDouble("FeuerwehrhausLocationLat")+"%2C"+config.getDouble("FeuerwehrhausLocationLon") +
+                                "&loc="+this.einsatzLat+"%2C"+this.einsatzLng
+                );
+            }
+
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()
                     .uri(URI.create(uri.toString()))
