@@ -173,7 +173,7 @@ public class Einsatz {
                     System.out.println("Saving Hydrants to file://" + hydrantsResultFile.replace(" ", "%20"));
                     fos.write(hydrantsResult.toString().getBytes());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("Failed to save Hydrants to file://" + hydrantsResultFile.replace(" ", "%20"));
                 }
             }
 
