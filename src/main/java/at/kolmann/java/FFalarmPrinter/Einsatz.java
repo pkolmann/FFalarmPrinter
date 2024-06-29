@@ -69,7 +69,7 @@ public class Einsatz {
                     System.out.println("Saving Map to file://" + routeResultFile.replace(" ", "%20"));
                     fos.write(routerResult.toString().getBytes());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("Failed to save Route to file://" + routeResultFile.replace(" ", "%20"));
                 }
             }
 
@@ -82,7 +82,7 @@ public class Einsatz {
                 try {
                     hydrantSearchRadius = config.getDouble("hydrantSearchRadius");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("Failed to get hydrantSearchRadius from config: " + e.getMessage());
                 }
 
                 // Mean Earth Radius, as recommended for use by
@@ -185,7 +185,9 @@ public class Einsatz {
                     );
                     fos.write(einsatzMap);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("Failed to save Map to file://" + savePath.replace(" ", "%20")
+                            + File.separator + alarmPath.replace(" ", "%20" + ".png")
+                    );
                 }
             } else {
                 System.out.println("Failed to get MapsImage!");
@@ -204,20 +206,32 @@ public class Einsatz {
                     jsonValues.add(dispos.getJSONObject(i));
                 }
                 jsonValues.sort(new Comparator<>() {
-                    private static final String KEY_NAME = "DispoTime";
+                    private static final String DISPO_KEY = "DispoTime";
+                    private static final String AUS_KEY = "AusTime";
 
                     @Override
                     public int compare(JSONObject a, JSONObject b) {
-                        String valA = "";
-                        String valB = "";
+                        String valA;
+                        String valB;
 
-                        if (a.has(KEY_NAME) && b.has(KEY_NAME)) {
-                            try {
-                                valA = a.getString(KEY_NAME);
-                                valB = b.getString(KEY_NAME);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
+                        try {
+                            if (a.has(DISPO_KEY)) {
+                                valA = a.getString(DISPO_KEY);
+                            } else if (a.has(AUS_KEY)) {
+                                valA = a.getString(AUS_KEY);
+                            } else {
+                                return 1;
                             }
+                            if (b.has(DISPO_KEY)) {
+                                valB = b.getString(DISPO_KEY);
+                            } else if (b.has(AUS_KEY)) {
+                                valB = b.getString(AUS_KEY);
+                            } else {
+                                return -1;
+                            }
+                        } catch (JSONException e) {
+                            System.out.println("JSONException: " + e.getMessage());
+                            return 1;
                         }
 
                         return valA.compareTo(valB);
