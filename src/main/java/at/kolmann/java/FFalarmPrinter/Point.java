@@ -78,5 +78,21 @@ public class Point implements Serializable {
         return hash;
     }
 
+    /**
+     * Compute the distance between two points in meters. The formula is the haversine formula.
+     * @param that the other point
+     * @return the distance in meters
+     */
+    public double distanceTo(Point that) {
+        double lat1 = Math.toRadians(this.lat);
+        double lon1 = Math.toRadians(this.lng);
+        double lat2 = Math.toRadians(that.lat);
+        double lon2 = Math.toRadians(that.lng);
+        double deltaLat = lat2 - lat1;
+        double deltaLon = lon2 - lon1;
+        double a = Math.pow(Math.sin(deltaLat / 2), 2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(deltaLon / 2), 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return 6371e3 * c;
+    }
 }
 

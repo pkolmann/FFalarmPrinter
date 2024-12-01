@@ -10,10 +10,7 @@ import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class Einsatz {
     private final Config config;
@@ -21,6 +18,7 @@ public class Einsatz {
     private final EinsatzHTML einsatzHTML;
     private final EinsatzPrint einsatzPrint;
     private final LastEinsatzStore lastEinsatzStore;
+    private final Verwaltungsgrenzen verwaltungsgrenzen;
 
     public Einsatz(Config config, LastEinsatzStore lastEinsatzStore) {
         this.config = config;
@@ -28,6 +26,7 @@ public class Einsatz {
         einsatzPDF = new EinsatzPDF(config);
         einsatzHTML = new EinsatzHTML(config);
         einsatzPrint = new EinsatzPrint(config, lastEinsatzStore);
+        verwaltungsgrenzen = new Verwaltungsgrenzen(config);
     }
 
     public void process(@NotNull JSONObject einsatz, String savePath, String alarmPath) throws IOException {
@@ -75,6 +74,7 @@ public class Einsatz {
 
             Point einsatzLatLng = einsatzRouter.getEinsatzLatLng();
             ArrayList<Node> hydrants = null;
+            List<String> verwaltungsGrenzen = null;
             if (einsatzLatLng != null) {
                 GeoLocation einsatzLocation = GeoLocation.fromDegrees(einsatzLatLng.getLat(), einsatzLatLng.getLng());
 
@@ -93,6 +93,15 @@ public class Einsatz {
                 OsmHydrant osmHydrant = new OsmHydrant();
 
                 hydrants = osmHydrant.getHydrants(einsatzBox);
+
+                double verwalungsGrenzenSearchRadius = 800.0; // 800m
+                try {
+                    verwalungsGrenzenSearchRadius = config.getDouble("verwalungsGrenzenSearchRadius");
+                } catch (IOException e) {
+                    // Ignore and use default
+                }
+                GeoLocation[] einsatzBoxVerwaltung = einsatzLocation.boundingCoordinates(verwalungsGrenzenSearchRadius, earthRadius);
+                verwaltungsGrenzen = verwaltungsgrenzen.filter(einsatzLatLng);
             }
 
             JSONArray hydrantsResult = new JSONArray();
@@ -166,6 +175,20 @@ public class Einsatz {
                                 .put("Lon", hydrant.getPosition().getLongitude())
                                 .put("text", hydrantText.toString())
                     );
+                }
+
+                // Store Verwaltungsgrenzen
+                if (verwaltungsGrenzen != null) {
+                    String verwaltungsGrenzenResultFile = savePath + File.separator + alarmPath+"_verwaltungsgrenzen.jsonl";
+                    try (FileOutputStream fos = new FileOutputStream(verwaltungsGrenzenResultFile)) {
+                        System.out.println("Saving Verwaltungsgrenzen to file://" + verwaltungsGrenzenResultFile.replace(" ", "%20"));
+                        for (String line : verwaltungsGrenzen) {
+                            fos.write(line.getBytes());
+                            fos.write("\n".getBytes());
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 String hydrantsResultFile = savePath + File.separator + alarmPath+"_hydrants.json";

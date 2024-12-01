@@ -33,8 +33,14 @@
   "_comment_FeuerwehrName": "Specify Name to highlight on Alarm-List",
   "FeuerwehrName": "XX",
   
-  "_comment_HydrantSearchRadius": "Specify the search radius to search for hydrants in OpenStreetMap (in meters)",
-  "hydrantSearchRadius": 400,
+  "_comment_HydrantSearchRadius": "Specify the search radius to search for hydrants in OpenStreetMap (in meters, default: 100m)",
+  "hydrantSearchRadius": 100,
+
+  "_comment_verwaltungsGrenzenFile": "Specify the file with the Verwaltungsgrenzen",
+  "verwaltungsGrenzenFile": "verwaltungsgrenzen.geojsonl",
+
+  "_comment_verwalungsGrenzenSearchRadius": "Specify the search radius to search for Verwaltungsgrenzen in OpenStreetMap (in meters, default: 800m)",
+  "verwalungsGrenzenSearchRadius": 800,
   
   "_comment_FeuerwehrLogo": "Path to a logo to be added to alarm file",
   "FeuerwehrLogo": "FF-logo.jpg",

@@ -2,4 +2,7 @@
 /target
 /config.json
 /einsatzWEB/
+/einsatzWEB/*/*
 /lastEinsatz.txt
+/Verwaltungsgrenzen.geojsonl
+/FF-logo.jpg

@@ -3,17 +3,17 @@
 //decode an encoded string
 function decode(encoded) {
     //precision
-    var inv = 1.0 / 1e5;
-    var decoded = [];
-    var previous = [0,0];
-    var i = 0;
+    const inv = 1.0 / 1e5;
+    const decoded = [];
+    const previous = [0, 0];
+    let i = 0;
     //for each byte
     while(i < encoded.length) {
         //for each coord (lat, lon)
-        var ll = [0,0]
-        for(var j = 0; j < 2; j++) {
-            var shift = 0;
-            var byte = 0x20;
+        const ll = [0, 0];
+        for(let j = 0; j < 2; j++) {
+            let shift = 0;
+            let byte = 0x20;
             //keep decoding bytes until you have this coord
             while(byte >= 0x20) {
                 byte = encoded.charCodeAt(i++) - 63;
@@ -52,7 +52,7 @@ function initialize() {
         }
 
         const anfahrt = document.getElementById("einsatz-anfahrt-data");
-        anfahrt.innerHTML  = Math.round(totalDistance / 10) / 100;
+        anfahrt.innerHTML  = (Math.round(totalDistance / 10) / 100).toString();
         anfahrt.innerHTML += "km - ungef&auml;hr ";
         if (totalDuration > 3600) {
             const hours = Math.floor(totalDuration / 3600);

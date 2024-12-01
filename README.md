@@ -17,6 +17,25 @@ This project uses maven. So you should be able to compile it via
 
 `mvn package assembly:single`
 
+## Getting Verwaltungsgrenzen
+
+The Verwaltungsgrenzen are fetched from the Verwaltungsgrenzen product from the BEV.
+
+https://www.bev.gv.at/Services/Produkte/Kataster-und-Verzeichnisse/Verwaltungsgrenzen.html
+
+https://www.bev.gv.at/Services/Downloads/Produktbezogene-Downloads/Unentgeltliche-Produkte/Kataster-Verzeichnisse/Aktualitaetsstand-2021.html
+
+Then open the whole zip file as Layer in QGIS and export it as GeoJSON.
+
+* Add Vector Layer (file.zip)
+* Export
+* Save Features as
+* GeoJSON - Newline Delimited
+* File: Verwaltungsgrenzen.geojsonl
+* CRS: EPSG:4326
+* Export all features
+* Save
+
 ## Running
 
 It's important to have the current working directory set to the proper directory or it won't work.
