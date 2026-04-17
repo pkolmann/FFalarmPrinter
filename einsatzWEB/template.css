@@ -54,6 +54,20 @@
     text-align: center;
 }
 
+.hydrant-popup {
+    line-height: 1.35;
+}
+
+.hydrant-popup-heading {
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin-bottom: 0.35rem;
+}
+
+.hydrant-popup-details {
+    font-size: 0.95rem;
+}
+
 #archive-header {
     margin-bottom: 1.5em;
     margin-left: 1.5em;

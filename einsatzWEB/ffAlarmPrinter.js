@@ -133,6 +133,39 @@ function initialize() {
 
         return Math.max(400, Math.round(getCurrentWindowWidth() * 0.5));
     };
+    const getHydrantPopupContent = (hydrant) => (hydrant.text || "").trim().replace(/(<br\s*\/?>\s*)+$/i, "");
+    const getHydrantArtHeading = (hydrantPopupContent) => {
+        const artMatch = hydrantPopupContent.match(/Art:\s*([^<]+)/i);
+        return artMatch ? artMatch[1].trim() : "";
+    };
+    const getHydrantPopupHeading = (hydrantPopupContent) => getHydrantArtHeading(hydrantPopupContent)
+        || (hydrantPopupContent.startsWith("Ansaugplatz") ? "Ansaugplatz" : "Hydrant");
+    const getHydrantPopupDetails = (hydrantPopupContent) => {
+        if (getHydrantArtHeading(hydrantPopupContent) === "") {
+            return hydrantPopupContent;
+        }
+
+        return hydrantPopupContent
+            .replace(/(?:^|<br\s*\/?>\s*)Art:\s*[^<]+(?:<br\s*\/?>\s*)?/gi, "<br />")
+            .replace(/^(?:<br\s*\/?>\s*)+/i, "")
+            .replace(/(?:<br\s*\/?>\s*)+$/i, "")
+            .replace(/(<br\s*\/?>\s*){2,}/gi, "<br />");
+    };
+    const getHydrantPopupHtml = (hydrant) => {
+        const hydrantPopupContent = getHydrantPopupContent(hydrant);
+        const hydrantPopupHeading = getHydrantPopupHeading(hydrantPopupContent);
+        const hydrantPopupDetails = getHydrantPopupDetails(hydrantPopupContent);
+
+        if (hydrantPopupContent === "") {
+            return "";
+        }
+
+        return "<div class=\"hydrant-popup\">"
+            + "<div class=\"hydrant-popup-heading\">" + hydrantPopupHeading + "</div>"
+            + (hydrantPopupDetails === "" ? "" : "<div class=\"hydrant-popup-details\">" + hydrantPopupDetails + "</div>")
+            + "</div>";
+    };
+    const getHydrantTitleText = (hydrant) => getHydrantPopupContent(hydrant).replaceAll("<br />", "\n").replace(/<br\s*\/?>/g, "\n");
 
     mapElement.style.height = getMapHeight() + "px";
 
@@ -262,14 +295,19 @@ function initialize() {
     document.addEventListener("webkitfullscreenchange", updateResponsiveMapLayout);
 
     // Add hydrants to map first, so other layers are infront
-    for (const i in hydrantsJson) {
-        console.log(hydrantsJson[i]);
+    for (const hydrant of hydrantsJson) {
+        console.log(hydrant);
+        const hydrantPopupHtml = getHydrantPopupHtml(hydrant);
         const hydrantMarker = new L.Marker(
-            [hydrantsJson[i].Lat, hydrantsJson[i].Lon],
+            [hydrant.Lat, hydrant.Lon],
             {
-                title: hydrantsJson[i].text.replaceAll("<br />", "\n")
+                title: getHydrantTitleText(hydrant)
             }
         ).addTo(map);
+
+        if (hydrantPopupHtml !== "") {
+            hydrantMarker.bindPopup(hydrantPopupHtml);
+        }
 
         // https://stackoverflow.com/a/61982880
         hydrantMarker._icon.classList.add("hydrantHue");
