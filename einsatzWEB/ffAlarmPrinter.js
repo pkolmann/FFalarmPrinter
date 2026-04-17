@@ -1,6 +1,5 @@
-
+// decode an encoded string
 // src: https://valhalla.github.io/demos/polyline/decode.js
-//decode an encoded string
 function decode(encoded) {
     //precision
     const inv = 1.0 / 1e5;
@@ -105,6 +104,15 @@ function initialize() {
         bounds: [[46.35877, 8.782379], [49.037872, 17.189532]]
     });
 
+    const bevMap = L.tileLayer("https://maps.bev.gv.at/tiles/karte/{z}/{x}/{y}.png", {
+        minZoom: 8,
+        maxNativeZoom: 16,
+        maxZoom: 20,
+        type: 'normal',
+        format: 'jpeg',
+        attribution: 'Map data: &copy; <a href="https://maps.bev.gv.at/">Austrian Map BEV CC BY 4.0</a>'
+    });
+
     const OpenFireMap = L.tileLayer('http://openfiremap.org/hytiles/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Map style: &copy; <a href="http://www.openfiremap.org">OpenFireMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
@@ -121,6 +129,7 @@ function initialize() {
         'OpenStreetMap': osm,
         'BasemapAT': BasemapAT_highdpi,
         'BasemapAT Orthofoto': BasemapAT_orthofoto,
+        "Austrian Map / ÖK": bevMap,
     };
 
     const overlays = {
