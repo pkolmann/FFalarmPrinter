@@ -137,7 +137,26 @@ function initialize() {
         BasemapAT: BasemapAT_overlay
     };
 
-    const layerControl = L.control.layers(basemaps, overlays, {collapsed: false}).addTo(map);
+    const smallScreenBreakpoint = 1024;
+    const getCurrentWindowWidth = () => window.innerWidth || document.documentElement.clientWidth;
+    const isSmallScreen = () => getCurrentWindowWidth() <= smallScreenBreakpoint;
+
+    let isLayerControlCollapsed = isSmallScreen();
+    let layerControl = L.control.layers(basemaps, overlays, {collapsed: isLayerControlCollapsed}).addTo(map);
+
+    // Only recreate the control when crossing the breakpoint.
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(() => {
+            const shouldBeCollapsed = isSmallScreen();
+            if (shouldBeCollapsed !== isLayerControlCollapsed) {
+                map.removeControl(layerControl);
+                isLayerControlCollapsed = shouldBeCollapsed;
+                layerControl = L.control.layers(basemaps, overlays, {collapsed: isLayerControlCollapsed}).addTo(map);
+            }
+        }, 150);
+    });
 
     // Add hydrants to map first, so other layers are infront
     for (const i in hydrantsJson) {
