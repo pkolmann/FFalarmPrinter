@@ -1,3 +1,5 @@
+const startName = "Feuerwehr Pitten";
+
 // decode an encoded string
 // src: https://valhalla.github.io/demos/polyline/decode.js
 function decode(encoded) {
@@ -166,6 +168,27 @@ function initialize() {
             + "</div>";
     };
     const getHydrantTitleText = (hydrant) => getHydrantPopupContent(hydrant).replaceAll("<br />", "\n").replace(/<br\s*\/?>/g, "\n");
+    const trimPopupHtml = (popupContent) => (popupContent || "").trim().replace(/(<br\s*\/?>\s*)+$/i, "");
+    const getMarkerPopupHtml = (heading, details = "") => {
+        const popupHeading = (heading || "").trim();
+        const popupDetails = trimPopupHtml(details);
+
+        if (popupHeading === "" && popupDetails === "") {
+            return "";
+        }
+
+        return "<div class=\"hydrant-popup\">"
+            + (popupHeading === "" ? "" : "<div class=\"hydrant-popup-heading\">" + popupHeading + "</div>")
+            + (popupDetails === "" ? "" : "<div class=\"hydrant-popup-details\">" + popupDetails + "</div>")
+            + "</div>";
+    };
+    const getStartMarkerPopupHtml = () => getMarkerPopupHtml(startName);
+    const getEndMarkerPopupHtml = () => {
+        const einsatzAdresse = document.querySelector("#einsatz-adresse .rechts");
+        const addressDetails = einsatzAdresse ? einsatzAdresse.innerHTML : "";
+
+        return getMarkerPopupHtml("Einsatzort", addressDetails);
+    };
 
     mapElement.style.height = getMapHeight() + "px";
 
@@ -330,9 +353,10 @@ function initialize() {
     const startMarker = new L.Marker(
         [startLat, startLong],
         {
-            title: "Feuerwehr Pitten"
+            title: startName
         }
     ).addTo(map);
+    startMarker.bindPopup(getStartMarkerPopupHtml());
     startMarker._icon.classList.add("startHue");
 
     // Add End Pin
@@ -342,6 +366,7 @@ function initialize() {
             title: "Einsatzort"
         }
     ).addTo(map);
+    endMarker.bindPopup(getEndMarkerPopupHtml());
     // https://stackoverflow.com/a/61982880
     endMarker._icon.classList.add("endHue");
 
