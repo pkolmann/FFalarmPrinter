@@ -84,6 +84,58 @@ function initialize() {
         }
     }
 
+    const smallScreenBreakpoint = 1024;
+    const mobileMapHeightRatio = 0.5;
+    const mapElement = document.getElementById("map");
+    const getCurrentWindowWidth = () => window.innerWidth || document.documentElement.clientWidth;
+    const getFullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+    const isMapFullscreen = () => getFullscreenElement() === mapElement;
+    const requestMapFullscreen = () => {
+        if (mapElement.requestFullscreen) {
+            return mapElement.requestFullscreen();
+        }
+
+        if (mapElement.webkitRequestFullscreen) {
+            return mapElement.webkitRequestFullscreen();
+        }
+
+        return null;
+    };
+    const exitMapFullscreen = () => {
+        if (document.exitFullscreen) {
+            return document.exitFullscreen();
+        }
+
+        if (document.webkitExitFullscreen) {
+            return document.webkitExitFullscreen();
+        }
+
+        return null;
+    };
+    const getCurrentWindowHeight = () => {
+        if (window.visualViewport && window.visualViewport.height) {
+            return window.visualViewport.height;
+        }
+
+        return window.innerHeight || document.documentElement.clientHeight;
+    };
+    const isSmallScreen = () => getCurrentWindowWidth() <= smallScreenBreakpoint;
+    const getMapHeight = () => {
+        const currentWindowHeight = getCurrentWindowHeight();
+
+        if (isMapFullscreen()) {
+            return currentWindowHeight;
+        }
+
+        if (isSmallScreen()) {
+            return Math.max(320, Math.round(currentWindowHeight * mobileMapHeightRatio));
+        }
+
+        return Math.max(400, Math.round(getCurrentWindowWidth() * 0.5));
+    };
+
+    mapElement.style.height = getMapHeight() + "px";
+
     const map = L.map('map').setView([endLat, endLong], mapZoom);
     const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 20,
@@ -137,26 +189,77 @@ function initialize() {
         BasemapAT: BasemapAT_overlay
     };
 
-    const smallScreenBreakpoint = 1024;
-    const getCurrentWindowWidth = () => window.innerWidth || document.documentElement.clientWidth;
-    const isSmallScreen = () => getCurrentWindowWidth() <= smallScreenBreakpoint;
-
     let isLayerControlCollapsed = isSmallScreen();
     let layerControl = L.control.layers(basemaps, overlays, {collapsed: isLayerControlCollapsed}).addTo(map);
+    let fullscreenToggleLink;
 
-    // Only recreate the control when crossing the breakpoint.
+    const updateFullscreenToggleState = () => {
+        if (!fullscreenToggleLink) {
+            return;
+        }
+
+        const isFullscreen = isMapFullscreen();
+        fullscreenToggleLink.innerHTML = isFullscreen ? "&times;" : "&#x26F6;";
+        fullscreenToggleLink.title = isFullscreen ? "Vollbild beenden" : "Karte im Vollbild anzeigen";
+        fullscreenToggleLink.setAttribute("aria-label", fullscreenToggleLink.title);
+    };
+
+    const FullscreenControl = L.Control.extend({
+        options: {
+            position: "topright"
+        },
+
+        onAdd() {
+            const container = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom leaflet-control-fullscreen");
+            fullscreenToggleLink = L.DomUtil.create("a", "leaflet-control-fullscreen-toggle", container);
+            fullscreenToggleLink.href = "#";
+            updateFullscreenToggleState();
+
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.on(fullscreenToggleLink, "click", (event) => {
+                L.DomEvent.stop(event);
+
+                if (isMapFullscreen()) {
+                    exitMapFullscreen();
+                } else {
+                    requestMapFullscreen();
+                }
+            });
+
+            return container;
+        }
+    });
+
+    new FullscreenControl().addTo(map);
+
+    const updateResponsiveMapLayout = () => {
+        mapElement.style.height = getMapHeight() + "px";
+
+        const shouldBeCollapsed = isSmallScreen();
+        if (shouldBeCollapsed !== isLayerControlCollapsed) {
+            map.removeControl(layerControl);
+            isLayerControlCollapsed = shouldBeCollapsed;
+            layerControl = L.control.layers(basemaps, overlays, {collapsed: isLayerControlCollapsed}).addTo(map);
+        }
+
+        updateFullscreenToggleState();
+        map.invalidateSize();
+    };
+
     let resizeTimer;
-    window.addEventListener("resize", () => {
+    const queueResponsiveMapUpdate = () => {
         window.clearTimeout(resizeTimer);
         resizeTimer = window.setTimeout(() => {
-            const shouldBeCollapsed = isSmallScreen();
-            if (shouldBeCollapsed !== isLayerControlCollapsed) {
-                map.removeControl(layerControl);
-                isLayerControlCollapsed = shouldBeCollapsed;
-                layerControl = L.control.layers(basemaps, overlays, {collapsed: isLayerControlCollapsed}).addTo(map);
-            }
+            updateResponsiveMapLayout();
         }, 150);
-    });
+    };
+
+    window.addEventListener("resize", queueResponsiveMapUpdate);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", queueResponsiveMapUpdate);
+    }
+    document.addEventListener("fullscreenchange", updateResponsiveMapLayout);
+    document.addEventListener("webkitfullscreenchange", updateResponsiveMapLayout);
 
     // Add hydrants to map first, so other layers are infront
     for (const i in hydrantsJson) {
@@ -208,4 +311,5 @@ function initialize() {
         imperial: false
     }).addTo(map);
 
+    updateResponsiveMapLayout();
 }
